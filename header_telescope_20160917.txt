@@ -1,0 +1,44 @@
+NA                OBSERVAT   string NAOJ    Observatory
+NA                TELESCOP   string Subaru  Telescope/System which Inst. is attached
+NA                INSTRUME   string CHARIS  Instrument name
+NA                TIMESYS    string UTC     Time System used in the header
+#
+FITS.CRS.PROP-ID  PROP-ID    string UNKNOWN    Proposal ID                                    
+FITS.CRS.OBSERVER OBSERVER   string UNKNOWN    Observer
+# We now pass the object name in via the ramp command.
+# FITS.CRS.OBJECT   OBJECT     string UNKNOWN    Object                                         
+FITS.CRS.OBS-ALOC OBS-ALOC   string UNKNOWN    Observation or Standby                         
+FITS.CRS.OBS-MOD  OBS-MOD    string UNKNOWN    Observation Mode
+FITS.SBR.DATE-OBS DATE-OBS   string UNKNOWN    UT date of Observation (yyyy-mm-dd) 
+#
+NA                RADECSYS   string FK5        The equatorial coordinate system
+NA                LONGPOLE   float  180.0      The North Pole of standard system (deg)
+FITS.SBR.RA       RA         string UNKNOWN    RA of telescope pointing (HH:MM:SS.SSS)
+FITS.SBR.DEC      DEC        string UNKNOWN    DEC of telescope pointing (+/-DD:MM:SS.SS)
+FITS.SBR.EQUINOX  EQUINOX    string UNKNOWN    Standard FK5 (years) 
+FITS.SBR.TELFOCUS TELFOCUS   string UNKNOWN    Focus where a beam is reachable 
+FITS.SBR.FOC-VAL  FOC-VAL    float  0.0        Encoder value of the focus unit (mm)
+FITS.SBR.AIRMASS  AIRMASS    float  0.0        Typical air mass during exposure
+FITS.SBR.ZD       ZD         float  0.0        Zenith Distance at typical time (degree) 
+#
+FITS.SBR.SEEING   SEEING     float  0.0        FWHM of star size at telescope focus (arcsec)
+FITS.SBR.TRANSP   TRANSP     float  0.0        Sky transparency   
+FITS.SBR.WEATHER  WEATHER    string UNKNOWN    Weather condition (selected by observer)
+FITS.SBR.AZIMUTH  AZIMUTH    float  0.0        Azimuth of telescope pointing 
+FITS.SBR.ALTITUDE ALTITUDE   float  0.0        Altitude of telescope pointing                 
+FITS.SBR.ZD       ZD         float  0.0        Zenith distance at typical time
+FITS.SBR.AIRMASS  AIRMASS    float  0.0        Air Mass at start      
+FITS.SBR.TELFOCUS TELFOCUS   string UNKNOWN    Focus where a beam is reachable                
+FITS.CRS.FOC-POS  FOC-POS    string UNKNOWN    Focus where instrument is attached             
+FITS.SBR.FOC-VAL  FOC-VAL    float  0.0        Encoder value of the focus unit      
+FITS.SBR.AUTOGUID AUTOGUID   string UNKNOWN    Auto guide on/off 
+FITS.SBR.M2-TYPE  M2-TIP     string UNKNOWN    2nd mirror tip-tilt on-off                     
+FITS.SBR.M2-TIP   M2-TYPE    string UNKNOWN    2nd mirror type        
+FITS.SBR.DOM-HUM  DOM-HUM    float  0.0        Dome humidity (  %)                              
+FITS.SBR.DOM-PRS  DOM-PRS    float  0.0        Dome pressure (hpa)                            
+FITS.SBR.DOM-TMP  DOM-TMP    float  0.0        Dome temperature (C)                           
+FITS.SBR.DOM-WND  DOM-WND    float  0.0        Dome wind speed (m/sec)                        
+FITS.SBR.OUT-HUM  OUT-HUM    float  0.0        Outside humidity (  %)                           
+FITS.SBR.OUT-PRS  OUT-PRS    float  0.0        Outside pressure (hpa)                         
+FITS.SBR.OUT-TMP  OUT-TMP    float  0.0        Outside temperature (C)                        
+FITS.SBR.OUT-WND  OUT-WND    float  0.0        Outside wind speed (m/sec)                     

@@ -1,0 +1,3 @@
+[submodule "g2cam"]
+	path = g2cam
+	url = https://github.com/naojsoft/g2cam.git
