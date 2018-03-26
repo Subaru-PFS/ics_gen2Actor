@@ -6,8 +6,7 @@
 """This file implements a simulator for a simulated instrument (PFS).
 """
 from __future__ import division
-from future import standard_library
-standard_library.install_aliases()
+from future import standard_library; standard_library.install_aliases()
 from builtins import zip
 from builtins import str
 from builtins import range
@@ -57,16 +56,16 @@ class HeaderQueryHandler(socketserver.BaseRequestHandler):
 
         ret = str(ret)
         self.request.sendall(ret.encode('latin-1'))
-        
+
 class HeaderTask(Task.Task):
     def __init__(self, port, localFunc, timeout=0.5):
         self.port = port
         self.localFunc = localFunc
         self.timeout = timeout
         self.handlerClass = HeaderQueryHandler
-        
+
         super(HeaderTask, self).__init__()
-        
+
     def stop(self):
         self.ev_quit.set()
 
@@ -76,7 +75,7 @@ class HeaderTask(Task.Task):
         server = HeaderServer(('', self.port), self.handlerClass)
         server.timeout = self.timeout
         server.localFunc = self.localFunc
-        
+
         while not self.ev_quit.isSet():
             try:
                 server.handle_request()
@@ -649,44 +648,6 @@ class PFS(BASECAM):
         self.ocs.archive_framelist(framelist)
 
 
-    def grism(self, tag=None, pos=None):
-        # extend the tag to make a subtag
-        subtag = '%s.1' % tag
-        self.ocs.setvals(tag, subpath=subtag)
-
-        pos = pos.lower()
-        self.ocs.setvals(subtag, task_start=time.time(),
-                         cmd_str='moving prism stage to %s...' % (pos))
-
-        ret = self.execOneCmd('pfs', 'slide '+pos, timelim=90, subtag=subtag)
-
-        self.ocs.setvals(subtag, cmd_str='Moved!')
-        self.ocs.setvals(subtag, task_end=time.time(), cmd_str="Done.")
-
-    def shutter(self, tag=None, pos=None):
-        # extend the tag to make a subtag
-        subtag = '%s.1' % tag
-        self.ocs.setvals(tag, subpath=subtag)
-
-        # Report on a subcommand.  Interesting tags are:
-        # * Having the value of float (e.g. time.time()):
-        #     task_start, task_end
-        #     cmd_time, ack_time, end_time (for communicating systems)
-        # * Having the value of str:
-        #     cmd_str, task_error
-
-        pos = pos.lower()
-        if pos == 'closed':
-            pos = 'close'
-        self.ocs.setvals(subtag, task_start=time.time(),
-                         cmd_str="moving shutter to %s" % (pos))
-
-        ret = self.execOneCmd('pfs', 'shutter '+pos, timelim=5, subtag=subtag)
-        self.ocs.setvals(subtag, cmd_str='Moved! ')
-        self.ocs.setvals(subtag, task_end=time.time())
-
-        self.logger.info("Set the shutter position to %s" % (pos))
-        
     def filter(self, tag=None, name=None):
         # extend the tag to make a subtag
         subtag = '%s.1' % tag
