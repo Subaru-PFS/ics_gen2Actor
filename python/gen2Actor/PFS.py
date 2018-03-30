@@ -124,6 +124,7 @@ class PFS(BASECAM):
 
         from gen2Actor import main
         self.actor = main.main()
+        self.actor.gen2 = self
 
         # Starts twisted reactor in background thread, command handler
         # in current thread
