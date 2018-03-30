@@ -300,7 +300,7 @@ class PFS(BASECAM):
     #######################################
 
     def execCmd(self, cmdStr, subtag=None, callback=None):
-        self.logger.debug('execIng: %s', cmdStr)
+        self.logger.info('execIng: %s', cmdStr)
         proc = subprocess.Popen([cmdStr], shell=True, bufsize=1,
                                 stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         ret = []
@@ -323,6 +323,7 @@ class PFS(BASECAM):
         err = proc.stderr.read()
         self.logger.warn('exec stderr: %s', err)
 
+        self.logger.info('done with: %s', cmdStr)
         return ret
 
     def execOneCmd(self, actor, cmdStr, timelim=60.0, subtag=None, callback=None):
