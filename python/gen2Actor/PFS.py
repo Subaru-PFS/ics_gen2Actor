@@ -10,6 +10,7 @@ from future import standard_library; standard_library.install_aliases()
 from builtins import zip
 from builtins import str
 from builtins import range
+from importlib import reload
 import logging
 import math
 import sys, os, time
@@ -542,6 +543,38 @@ class PFS(BASECAM):
         self.logger.info("Woke up refreshed!")
         self.ocs.setvals(subtag, task_end=time.time())
 
+    def reload(self, tag=None, module=None):
+        # extend the tag to make a subtag
+        subtag = '%s.1' % tag
+
+        # Set up the association of the subtag in relation to the tag
+        # This is used by integgui to set up the subcommand tracking
+        # Use the subtag after this--DO NOT REPORT ON THE ORIGINAL TAG!
+        self.ocs.setvals(tag, subpath=subtag)
+
+        # Report on a subcommand.  Interesting tags are:
+        # * Having the value of float (e.g. time.time()):
+        #     task_start, task_end
+        #     cmd_time, ack_time, end_time (for communicating systems)
+        # * Having the value of str:
+        #     cmd_str, task_error
+
+        self.ocs.setvals(subtag, task_start=time.time(),
+                         cmd_str=f'Reloading {module} ...')
+        self.logger.info("Reloading %s", module)
+
+        import PFSCommands
+        reload(PFSCommands)
+
+        for n in PFSCommands.__all__:
+            self.ocs.setvals(subtag, cmd_str=f'Trying to reload {n}\n')
+            self.logger.info("Reloading %s.%s", module, n)
+            setattr(self, n, getattr(PFSCommands, n).__get__(self))
+            self.ocs.setvals(subtag, cmd_str=f'reloaded {n}\n')
+            self.logger.info("Reloaded %s.%s", module, n)
+
+        self.logger.info("Reloaded all of %s", module)
+        self.ocs.setvals(subtag, task_end=time.time())
 
     def fits_file(self, motor='OFF', frame_no=None, target=None, template=None, delay=0,
                   tag=None):
