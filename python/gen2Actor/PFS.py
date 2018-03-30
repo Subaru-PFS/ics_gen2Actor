@@ -18,7 +18,6 @@ import threading
 from datetime import datetime, timedelta
 import pipes
 
-import socketserver
 import subprocess
 
 import astropy.io.fits as pyfits
@@ -34,53 +33,6 @@ from g2cam.util import common_task
 # Value to return for executing unimplemented command.
 # 0: OK, non-zero: error
 unimplemented_res = 0
-
-class HeaderServer(socketserver.TCPServer):
-    timeout = 1.0
-
-    def shutdown(self):
-        self.__shutdown_request = True
-
-
-class HeaderQueryHandler(socketserver.BaseRequestHandler):
-    def handle(self):
-        req = self.request.recv(1024).strip()
-        try:
-            ret = self.server.localFunc(req.decode('latin-1'))
-        except Exception as e:
-            logging.warn('failed to running command %s: %s' % (req, e))
-            ret = ''
-
-        ret = str(ret)
-        self.request.sendall(ret.encode('latin-1'))
-
-class HeaderTask(Task.Task):
-    def __init__(self, port, localFunc, timeout=0.5):
-        self.port = port
-        self.localFunc = localFunc
-        self.timeout = timeout
-        self.handlerClass = HeaderQueryHandler
-
-        super(HeaderTask, self).__init__()
-
-    def stop(self):
-        self.ev_quit.set()
-
-    def execute(self):
-        self.logger.info('Starting local PFS waiter')
-
-        server = HeaderServer(('', self.port), self.handlerClass)
-        server.timeout = self.timeout
-        server.localFunc = self.localFunc
-
-        while not self.ev_quit.isSet():
-            try:
-                server.handle_request()
-            except Exception as e:
-                self.logger.error("Error invoking fn: %s" % str(e))
-
-        self.logger.info('Stopping periodic interval task')
-
 
 class PFSError(CamCommandError):
     pass
@@ -255,24 +207,6 @@ class PFS(BASECAM):
         t = common_task.PowerMonTask(self, self.power_off, upstime=60.0)
         #self.power_task = t
         #t.init_and_start(self)
-
-        # Start header generating task
-        self.logger.info('HeaderTask: %s' % (HeaderTask))
-        t = HeaderTask(6666, self.localCmd)
-        t.init_and_start(self)
-
-    def localCmd(self, cmdStr):
-        """Entrypoint for PFS socket commands. """
-
-        args = cmdStr.split()
-        cmd = args[0]
-        cmdargs = args[1:]
-        self.logger.debug('local cmd=%s arg=%s' % (cmd, args))
-
-        if cmd == 'hdr':
-            return self.return_new_header(*cmdargs)
-        elif cmd == 'seqno':
-            return self.reqframes(type=cmdargs[0])[0]
 
     def stop(self, wait=True):
         super(PFS, self).stop(wait=wait)
@@ -478,7 +412,7 @@ class PFS(BASECAM):
             imrpad = float(self.statusDictAO['AON.IMR.PAD']) # degrees
             sin_pa = math.sin(imrpad * math.pi / 180.0)
             cos_pa = math.cos(imrpad * math.pi / 180.0)
-            
+
             pixscale = 1.54321e-5 # degrees
             cd1_1 = pixscale * bin * sin_pa
             cd1_2 = -pixscale * bin * cos_pa
