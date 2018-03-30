@@ -3,9 +3,8 @@
 #
 # Eric Jeschke (eric@naoj.org)
 #
-"""This file implements a simulator for a simulated instrument (PFS).
+"""This file implements the Gen2 client interface for the Prime Focus Spectrograph.
 """
-from __future__ import division
 from future import standard_library; standard_library.install_aliases()
 from builtins import zip
 from builtins import str
@@ -19,8 +18,6 @@ import threading
 from datetime import datetime, timedelta
 import pipes
 
-import numpy
-import select
 import socketserver
 import subprocess
 
@@ -31,9 +28,8 @@ from astropy.time import Time
 from g2base import Bunch, Task
 
 # g2cam imports
-from g2cam.Instrument import BASECAM, CamError, CamCommandError
+from g2cam.Instrument import BASECAM, CamCommandError
 from g2cam.util import common_task
-
 
 # Value to return for executing unimplemented command.
 # 0: OK, non-zero: error
@@ -120,7 +116,7 @@ class PFS(BASECAM):
         self.param.status_interval = 10.0
 
         self.frameType = 'A'
-        
+
     def ui(self, camName, options=None, args=None, ev_quit=None, logger=None):
         """ Called early enough that we can wire in an MHS actor thread. """
 
@@ -170,13 +166,13 @@ class PFS(BASECAM):
                             FitsComment = param[i]
                         else:
                             FitsComment = FitsComment + ' ' + param[i]
-                
+
                 StatAlias_list.append(StatAlias)
                 FitsKey_list.append(FitsKey)
                 FitsType_list.append(FitsType)
                 FitsDefault_list.append(FitsDefault)
                 FitsComment_list.append(FitsComment)
-                header_num += 1 
+                header_num += 1
 
         header = list(zip(StatAlias_list, FitsKey_list, FitsType_list, FitsDefault_list, FitsComment_list))
 
@@ -228,7 +224,7 @@ class PFS(BASECAM):
         # read telescope status
         self.tel_header = self.read_header_list("header_telescope_20160917.txt")
         self.statusDictTel = self.init_stat_dict(self.tel_header)
-        
+
         # Add other tables here if you have more than one table...
 
         # Establish initial status values
@@ -260,23 +256,23 @@ class PFS(BASECAM):
         #t.init_and_start(self)
 
         # Start header generating task
-        self.logger.info('HeaderTask: %s' % (HeaderTask))        
+        self.logger.info('HeaderTask: %s' % (HeaderTask))
         t = HeaderTask(6666, self.localCmd)
         t.init_and_start(self)
 
     def localCmd(self, cmdStr):
         """Entrypoint for PFS socket commands. """
-        
+
         args = cmdStr.split()
         cmd = args[0]
         cmdargs = args[1:]
         self.logger.debug('local cmd=%s arg=%s' % (cmd, args))
-        
+
         if cmd == 'hdr':
             return self.return_new_header(*cmdargs)
         elif cmd == 'seqno':
             return self.reqframes(type=cmdargs[0])[0]
-    
+
     def stop(self, wait=True):
         super(PFS, self).stop(wait=wait)
 
@@ -311,15 +307,15 @@ class PFS(BASECAM):
             ret.append(l.strip())
 
             self.ocs.setvals(subtag, cmd_str=l)
-            
+
             if callback is not None:
                 callback(subtag, l)
 
             if re.search('^\S+ \S+ [fF] .*', l):
                 raise CamCommandError(l)
-                
+
             self.logger.debug('exec ret: %s', l)
-            
+
         err = proc.stderr.read()
         self.logger.warn('exec stderr: %s', err)
 
@@ -332,7 +328,7 @@ class PFS(BASECAM):
 
         return self.execCmd('oneCmd.py %s --level=i --timelim=%0.1f %s' % (actor, timelim, cmdStr),
                             subtag=subtag, callback=callback)
-        
+
     def dispatchCommand(self, tag, cmdName, args, kwdargs):
         self.logger.debug("tag=%s cmdName=%s args=%s kwdargs=%s" % (
             tag, cmdName, str(args), str(kwdargs)))
@@ -361,10 +357,10 @@ class PFS(BASECAM):
         self.logger.info('fetching header...')
         hdr = self.fetch_header('here', 9999, 1, 4.5, datetime.utcnow())
         phdu = pyfits.PrimaryHDU(header=hdr)
-        
+
         self.logger.info('writing file...')
         phdu.writeto('/tmp/foo_2.fits', clobber=True, checksum=True)
-        
+
     def return_new_header(self, frameid, mode, itime, fullHeader=True):
         """ Update the external data feeding our headers and generate one. """
 
@@ -373,19 +369,22 @@ class PFS(BASECAM):
 
         self.logger.info('fetching header...')
         try:
-            hdr = self.fetch_header('here', frameid, mode, float(itime),
-                                    datetime.utcnow(),
+            hdr = self.fetch_header(frameid, mode, itime,
+                                    0.0,
                                     fullHeader=fullHeader)
         except Exception as e:
             self.logger.warn('failed to fetch header: %s', e)
             hdr = pyfits.Header()
-            
+
         return hdr.tostring()
-        
-    def fetch_header(self, path, frameid, mode, itime, utc_start,
+
+    def fetch_header(self, frameid, mode, itime, utc_start,
                      fullHeader=True):
 
         hdr = pyfits.Header()
+
+        if utc_start == 0.0:
+            utc_start = datetime.utcnow()
 
         # Date and Time
         utc_end = utc_start + timedelta(seconds=float(itime))
@@ -446,10 +445,10 @@ class PFS(BASECAM):
         hdr.set('EXPTIME',float(itime), "Total integration time of the frame (sec)")
         hdr.set('DATA-TYP', mode, "Subaru-style exp. type")
         hdr.set('IMAGETYP', mode, "non-Subaru-style exp. type")
-        
+
         if fullHeader is False:
             return hdr
-        
+
         # detector temperature (TBD)
         # hdr.set('DET-TMP', 0.0, "Detector temperature (K)")
 
@@ -513,7 +512,7 @@ class PFS(BASECAM):
 
 
         return hdr
-            
+
     #######################################
     # INSTRUMENT COMMANDS
     #######################################
@@ -623,10 +622,10 @@ class PFS(BASECAM):
             'FITS.PFS.PROP-ID': 'None',
             'FITS.PFS.OBSERVER': 'None',
             'FITS.PFS.OBJECT': 'None',
-            }
+        }
         try:
             res = self.ocs.requestOCSstatus(statusDict)
-            self.logger.debug("Status returned: %s" % (str(statusDict)))
+            self.logger.debug("Status returned: %s" % (str(res)))
 
         except PFSError as e:
             return (1, "Failed to fetch status: %s" % (str(e)))
@@ -694,38 +693,15 @@ class PFS(BASECAM):
         self.ocs.archive_framelist(framelist)
 
 
-    def filter(self, tag=None, name=None):
-        # extend the tag to make a subtag
-        subtag = '%s.1' % tag
-        self.ocs.setvals(tag, subpath=subtag)
-
-        # Report on a subcommand.  Interesting tags are:
-        # * Having the value of float (e.g. time.time()):
-        #     task_start, task_end
-        #     cmd_time, ack_time, end_time (for communicating systems)
-        # * Having the value of str:
-        #     cmd_str, task_error
-
-        if name.lower() == "broadband":
-            name = "Broadband"
-        self.ocs.setvals(subtag, task_start=time.time(),
-                         cmd_str="moving filter to %s" % (name))
-
-        ret = self.execOneCmd('pfs', 'filter '+name, timelim=90, subtag=subtag)
-        self.ocs.setvals(subtag, cmd_str='Moved! ')
-        self.ocs.setvals(subtag, task_end=time.time())
-
-        self.logger.info("Would set the filter to %s" % (name))
-
     def archivePfsFile(self, pathname):
         filename = os.path.basename(pathname)
         frameId = os.path.splitext(filename)[0]
 
         framelist = [(frameId, pathname)]
         self.logger.info('archiving: %s' % (framelist))
-        
+
         self.ocs.archive_framelist(framelist)
-        
+
     def ramp(self, tag=None, exptype='TEST', exptime=0.0,
              nreset=1, nread=2, nramp=1,
              objname=None, target=None):
@@ -741,7 +717,7 @@ class PFS(BASECAM):
            This turns into the OBJECT card.
 
         """
-        
+
         # extend the tag to make a subtag
         subtag = '%s.1' % tag
         self.ocs.setvals(tag, subpath=subtag)
@@ -758,7 +734,7 @@ class PFS(BASECAM):
 
         frames = self.reqframes(type=self.frameType)
         seqno = int(frames[0][4:])
-        
+
         self.ocs.setvals(subtag, task_start=time.time(),
                          cmd_str="Taking a %s ramp(%s, %s)" % (exptype, nreset, nread))
 
@@ -776,7 +752,7 @@ class PFS(BASECAM):
 
         if '"' in objname or "'" in objname:
             raise CamCommandError('sorry, but Craig cannot handle quotes in object names just yet')
-        
+
         self.execOneCmd('hx',
                         'ramp nreset=%d %s seqno=%d exptype=%s nramp=%s objname=%r' %
                         (nreset, readArg, seqno, exptype, nramp, pipes.quote(objname)),
@@ -785,7 +761,7 @@ class PFS(BASECAM):
 
         self.ocs.setvals(subtag, task_end=time.time(),
                          cmd_str="Done with ramp")
-        
+
     def putstatus(self, target="ALL"):
         """Forced export of our status.
         """
@@ -796,7 +772,6 @@ class PFS(BASECAM):
 
         self.ocs.exportStatus()
 
-
     def getstatus(self, target="ALL"):
         """Forced import of our status using the normal status interface.
         """
@@ -805,8 +780,9 @@ class PFS(BASECAM):
                                                                              'TSCV.FOCUSINFO',
                                                                              'TSCV.FOCUSINFO2'])
 
-        self.logger.info("Status returned: ra=%s dec=%s focusinfo=%s focusinfo2=%s" % (ra, dec, focusinfo, focusinfo2))
-
+        self.logger.info("Status returned: ra=%s dec=%s focusinfo=%s focusinfo2=%s" % (ra, dec,
+                                                                                       focusinfo,
+                                                                                       focusinfo2))
 
     def getstatus2(self, target="ALL"):
         """Forced import of our status using the 'fast' status interface.
