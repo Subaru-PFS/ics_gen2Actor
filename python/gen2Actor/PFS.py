@@ -121,6 +121,18 @@ class PFS(BASECAM):
 
         self.frameType = 'A'
         
+    def ui(self, camName, options=None, args=None, ev_quit=None, logger=None):
+        """ Called early enough that we can wire in an MHS actor thread. """
+
+        logger.warn('in ui -- starting MHS Actor loop.')
+
+        from gen2Actor import main
+        self.actor = main.main()
+
+        # Starts twisted reactor in background thread, command handler
+        # in current thread
+        self.actor.run()
+
     #######################################
     # INITIALIZATION
     #######################################
