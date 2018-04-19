@@ -3,12 +3,12 @@ NA                TELESCOP   string Subaru  Telescope/System which Inst. is atta
 NA                INSTRUME   string PFS     Instrument name
 NA                TIMESYS    string UTC     Time System used in the header
 #
-FITS.CRS.PROP-ID  PROP-ID    string UNKNOWN    Proposal ID                                    
-FITS.CRS.OBSERVER OBSERVER   string UNKNOWN    Observer
+FITS.PFS.PROP-ID  PROP-ID    string UNKNOWN    Proposal ID                                    
+FITS.PFS.OBSERVER OBSERVER   string UNKNOWN    Observer
 # We now pass the object name in via the ramp command.
-# FITS.CRS.OBJECT   OBJECT     string UNKNOWN    Object                                         
-FITS.CRS.OBS-ALOC OBS-ALOC   string UNKNOWN    Observation or Standby                         
-FITS.CRS.OBS-MOD  OBS-MOD    string UNKNOWN    Observation Mode
+# FITS.PFS.OBJECT   OBJECT     string UNKNOWN    Object                                         
+FITS.PFS.OBS-ALOC OBS-ALOC   string UNKNOWN    Observation or Standby                         
+FITS.PFS.OBS-MOD  OBS-MOD    string UNKNOWN    Observation Mode
 FITS.SBR.DATE-OBS DATE-OBS   string UNKNOWN    UT date of Observation (yyyy-mm-dd) 
 #
 NA                RADECSYS   string FK5        The equatorial coordinate system
@@ -29,7 +29,7 @@ FITS.SBR.ALTITUDE ALTITUDE   float  0.0        Altitude of telescope pointing
 FITS.SBR.ZD       ZD         float  0.0        Zenith distance at typical time
 FITS.SBR.AIRMASS  AIRMASS    float  0.0        Air Mass at start      
 FITS.SBR.TELFOCUS TELFOCUS   string UNKNOWN    Focus where a beam is reachable                
-FITS.CRS.FOC-POS  FOC-POS    string UNKNOWN    Focus where instrument is attached             
+FITS.PFS.FOC-POS  FOC-POS    string UNKNOWN    Focus where instrument is attached             
 FITS.SBR.FOC-VAL  FOC-VAL    float  0.0        Encoder value of the focus unit      
 FITS.SBR.AUTOGUID AUTOGUID   string UNKNOWN    Auto guide on/off 
 FITS.SBR.M2-TYPE  M2-TIP     string UNKNOWN    2nd mirror tip-tilt on-off                     
