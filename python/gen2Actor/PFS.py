@@ -202,6 +202,8 @@ class PFS(BASECAM):
         self.status_task = t
         t.init_and_start(self)
 
+        self._reload()
+
         # Start task to monitor summit power.  Call self.power_off
         # when we've been running on UPS power for 60 seconds
         t = common_task.PowerMonTask(self, self.power_off, upstime=60.0)
@@ -490,6 +492,23 @@ class PFS(BASECAM):
         self.logger.info("Woke up refreshed!")
         self.ocs.setvals(subtag, task_end=time.time())
 
+    def _reload(self, subtag=None, module=None):
+        self.logger.info("Reloading %s", module)
+
+        import PFSCommands
+        reload(PFSCommands)
+
+        for n in PFSCommands.__all__:
+            if subtag is not None:
+                self.ocs.setvals(subtag, cmd_str=f'Trying to reload {n}\n')
+            self.logger.info("Reloading %s.%s", module, n)
+            setattr(self, n, getattr(PFSCommands, n).__get__(self))
+            if subtag is not None:
+                self.ocs.setvals(subtag, cmd_str=f'reloaded {n}\n')
+            self.logger.info("Reloaded %s.%s", module, n)
+
+        self.logger.info("Reloaded all of %s", module)
+
     def reload(self, tag=None, module=None):
         # extend the tag to make a subtag
         subtag = '%s.1' % tag
@@ -508,19 +527,7 @@ class PFS(BASECAM):
 
         self.ocs.setvals(subtag, task_start=time.time(),
                          cmd_str=f'Reloading {module} ...')
-        self.logger.info("Reloading %s", module)
-
-        import PFSCommands
-        reload(PFSCommands)
-
-        for n in PFSCommands.__all__:
-            self.ocs.setvals(subtag, cmd_str=f'Trying to reload {n}\n')
-            self.logger.info("Reloading %s.%s", module, n)
-            setattr(self, n, getattr(PFSCommands, n).__get__(self))
-            self.ocs.setvals(subtag, cmd_str=f'reloaded {n}\n')
-            self.logger.info("Reloaded %s.%s", module, n)
-
-        self.logger.info("Reloaded all of %s", module)
+        self._reload(subtag=subtag, module=module)
         self.ocs.setvals(subtag, task_end=time.time())
 
     def fits_file(self, motor='OFF', frame_no=None, target=None, template=None, delay=0,
