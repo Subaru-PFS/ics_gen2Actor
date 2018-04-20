@@ -22,7 +22,8 @@ class Gen2Cmd(object):
         # passed a single argument, the parsed and typed command.
         #
         self.vocab = [
-            ('getFrameId', '', self.getFrameId),
+            ('getVisit', '', self.getVisit),
+            ('gen2Reload', '', self.gen2Reload),
             ('getFitsCards', '<frameId> <expTime> <expType>', self.getFitsCards),
         ]
 
@@ -43,14 +44,24 @@ class Gen2Cmd(object):
                                                  help='Gen2 frame ID'),
                                         )
 
-    def getFrameId(self, cmd):
-        """ Query for a new frame ID from Gen2. """
+    def getVisit(self, cmd):
+        """ Query for a new PFS visit from Gen2.
 
-        frameId = self.actor.gen2.reqframes()[0]
-        cmd.inform('text="raw frameid: %s"' % (frameId))
-        if not self.frameInstRE.search(frameId):
-            cmd.warn('text="current Gen2 instrument is not PFS: %s"' % (frameId[:4]))
-        cmd.finish('frameId=%d' % (int(frameId[4:12], base=10)))
+        This is slightly tricky. OCS allocates 8-digit IDs for single
+        image types, but we have four image types (PFS[ABCD]) and only
+        want 6-digits of ID.
+
+        So we
+
+        """
+
+        visit = self.actor.gen2.getPfsVisit()
+
+        cmd.finish('visit=%d' % (visit))
+
+    def gen2Reload(self, cmd):
+        self.actor.gen2._reload()
+        cmd.finish()
 
     def getFitsCards(self, cmd):
         """ Query for all TSC and observatory FITS cards. """
