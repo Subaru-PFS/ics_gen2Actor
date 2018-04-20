@@ -459,9 +459,8 @@ class PFS(BASECAM):
         """
         self.mode = mode
 
-    def sleep(self, tag=None, sleep_time=0):
-
-        itime = float(sleep_time)
+    def _subtag(self, tag):
+        """ Convert a tag into a subtag. """
 
         # extend the tag to make a subtag
         subtag = '%s.1' % tag
@@ -470,6 +469,14 @@ class PFS(BASECAM):
         # This is used by integgui to set up the subcommand tracking
         # Use the subtag after this--DO NOT REPORT ON THE ORIGINAL TAG!
         self.ocs.setvals(tag, subpath=subtag)
+
+        return subtag
+
+    def sleep(self, tag=None, sleep_time=0):
+
+        itime = float(sleep_time)
+
+        subtag = self._subtag(tag)
 
         # Report on a subcommand.  Interesting tags are:
         # * Having the value of float (e.g. time.time()):
@@ -510,21 +517,9 @@ class PFS(BASECAM):
         self.logger.info("Reloaded all of %s", module)
 
     def reload(self, tag=None, module=None):
-        # extend the tag to make a subtag
-        subtag = '%s.1' % tag
+        """ Reload some or all Gen2 commands. """
 
-        # Set up the association of the subtag in relation to the tag
-        # This is used by integgui to set up the subcommand tracking
-        # Use the subtag after this--DO NOT REPORT ON THE ORIGINAL TAG!
-        self.ocs.setvals(tag, subpath=subtag)
-
-        # Report on a subcommand.  Interesting tags are:
-        # * Having the value of float (e.g. time.time()):
-        #     task_start, task_end
-        #     cmd_time, ack_time, end_time (for communicating systems)
-        # * Having the value of str:
-        #     cmd_str, task_error
-
+        subtag = self._subtag(tag)
         self.ocs.setvals(subtag, task_start=time.time(),
                          cmd_str=f'Reloading {module} ...')
         self._reload(subtag=subtag, module=module)
@@ -660,16 +655,7 @@ class PFS(BASECAM):
 
         """
 
-        # extend the tag to make a subtag
-        subtag = '%s.1' % tag
-        self.ocs.setvals(tag, subpath=subtag)
-
-        # Report on a subcommand.  Interesting tags are:
-        # * Having the value of float (e.g. time.time()):
-        #     task_start, task_end
-        #     cmd_time, ack_time, end_time (for communicating systems)
-        # * Having the value of str:
-        #     cmd_str, task_error
+        subtag = self._subtag(tag)
 
         if nread > 0 and exptime > 0:
             raise CamCommandError('Either exptime OR nread can be set. Not both.')
