@@ -629,16 +629,6 @@ class PFS(BASECAM):
         self.logger.info("Submitting framelist '%s'" % str(framelist))
         self.ocs.archive_framelist(framelist)
 
-
-    def archivePfsFile(self, pathname):
-        filename = os.path.basename(pathname)
-        frameId = os.path.splitext(filename)[0]
-
-        framelist = [(frameId, pathname)]
-        self.logger.info('archiving: %s' % (framelist))
-
-        self.ocs.archive_framelist(framelist)
-
     def ramp(self, tag=None, exptype='TEST', exptime=0.0,
              nreset=1, nread=2, nramp=1,
              objname=None, target=None):
