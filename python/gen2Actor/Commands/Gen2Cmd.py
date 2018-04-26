@@ -72,5 +72,5 @@ class Gen2Cmd(object):
         expType = cmdKeys['expType'].values[0]
 
         hdr = self.actor.gen2.return_new_header(frameId, expType, expTime)
-        cmd.inform('header (%d lines)=%s' % (len(hdr), repr(hdr)))
+        cmd.inform('header=%s' % (repr(hdr)))
         cmd.finish()
