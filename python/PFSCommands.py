@@ -15,7 +15,7 @@ __all__ = ['pfsDribble',
            '_frameToVisit',
            '_getNextVisit']
 
-def _runPfsCmd(self, actor, cmdStr, tag, timeLim=10.0, callFunc=None):
+def _runPfsCmd(self, actor, cmdStr, tag, timeLim=30.0, callFunc=None):
     """ Run one MHS command, and report back to tag.
 
     Args
