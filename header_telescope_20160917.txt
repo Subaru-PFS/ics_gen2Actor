@@ -32,8 +32,6 @@ FITS.SBR.TELFOCUS TELFOCUS   string UNKNOWN    Focus where a beam is reachable
 FITS.PFS.FOC-POS  FOC-POS    string UNKNOWN    Focus where instrument is attached             
 FITS.SBR.FOC-VAL  FOC-VAL    float  0.0        Encoder value of the focus unit      
 FITS.SBR.AUTOGUID AUTOGUID   string UNKNOWN    Auto guide on/off 
-FITS.SBR.M2-TYPE  M2-TIP     string UNKNOWN    2nd mirror tip-tilt on-off                     
-FITS.SBR.M2-TIP   M2-TYPE    string UNKNOWN    2nd mirror type        
 FITS.SBR.DOM-HUM  DOM-HUM    float  0.0        Dome humidity (  %)                              
 FITS.SBR.DOM-PRS  DOM-PRS    float  0.0        Dome pressure (hpa)                            
 FITS.SBR.DOM-TMP  DOM-TMP    float  0.0        Dome temperature (C)                           
