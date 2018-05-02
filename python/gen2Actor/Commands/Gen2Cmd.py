@@ -40,7 +40,7 @@ class Gen2Cmd(object):
                                                  help='exposure type for FITS header'),
                                         keys.Key("expTime", types.Float(),
                                                  help='exposure time'),
-                                        keys.Key("frameId", types.Int(),
+                                        keys.Key("frameId", types.String(),
                                                  help='Gen2 frame ID'),
                                         )
 
@@ -70,6 +70,11 @@ class Gen2Cmd(object):
         frameId = cmdKeys['frameId'].values[0]
         expTime = cmdKeys['expTime'].values[0]
         expType = cmdKeys['expType'].values[0]
+
+        # Hack to enforce INSTRM-351 temporarily. For shame, CPL
+        #
+        if not frameId.startswith('PFS'):
+            frameId = 'PFSC%06d00' % (int(frameId, base=10))
 
         hdr = self.actor.gen2.return_new_header(frameId, expType, expTime)
         cmd.inform('header=%s' % (repr(hdr)))
