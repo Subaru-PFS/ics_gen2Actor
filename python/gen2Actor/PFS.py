@@ -366,6 +366,13 @@ class PFS(BASECAM):
 
         # frame ID
         hdr.set('FRAMEID',frameid, "Image sequential number")
+        if frameid.startsWith('PFS'):
+            try:
+                frameid = frameid[4:]
+                visit = int(frameid[:6], base=10)
+            except:
+                visit = 0
+            hdr.set('W_VISIT', visit, 'PFS visit')
 
         # readout mode
         # if mode == 0:
