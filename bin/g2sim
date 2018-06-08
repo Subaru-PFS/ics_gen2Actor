@@ -1,1 +1,3 @@
-python g2cam/scripts/g2cam --cam=PFS --obcpnum 27 --gen2host=g2sim.subaru.nao.ac.jp --loglevel=10
+python $ICS_GEN2ACTOR_DIR/g2cam/scripts/g2cam --cam=PFS --obcpnum 27 --gen2host=g2sim.subaru.nao.ac.jp "$@"
+
+
