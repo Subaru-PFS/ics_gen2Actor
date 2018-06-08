@@ -106,7 +106,7 @@ def keyFromReply(self, cmdReply, keyName):
                 return k
 
 def mcsexpose(self, tag=None, exptype='bias', exptime=0.0):
-
+    exptype = exptype.lower()
     exptime = float(exptime)
 
     subtag = self._subtag(tag)
