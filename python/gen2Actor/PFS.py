@@ -386,7 +386,7 @@ class PFS(BASECAM):
         #     hdr.set('DATA-TYP','UNKNOWN')
 
         # exposure time 
-        hdr.set('EXPTIME',float(itime), "Total integration time of the frame (sec)")
+        hdr.set('EXPTIME',float(itime), "[sec] Total integration time of the frame")
         hdr.set('DATA-TYP', mode, "Subaru-style exp. type")
         hdr.set('IMAGETYP', mode, "non-Subaru-style exp. type")
 

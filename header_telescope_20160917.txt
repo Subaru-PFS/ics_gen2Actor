@@ -5,38 +5,51 @@ NA                TIMESYS    string UTC     Time System used in the header
 #
 FITS.PFS.PROP-ID  PROP-ID    string UNKNOWN    Proposal ID                                    
 FITS.PFS.OBSERVER OBSERVER   string UNKNOWN    Observer
-# We now pass the object name in via the ramp command.
+# 
 # FITS.PFS.OBJECT   OBJECT     string UNKNOWN    Object                                         
 FITS.PFS.OBS-ALOC OBS-ALOC   string UNKNOWN    Observation or Standby                         
 FITS.PFS.OBS-MOD  OBS-MOD    string UNKNOWN    Observation Mode
 FITS.SBR.DATE-OBS DATE-OBS   string UNKNOWN    UT date of Observation (yyyy-mm-dd) 
 #
 NA                RADECSYS   string FK5        The equatorial coordinate system
-NA                LONGPOLE   float  180.0      The North Pole of standard system (deg)
+NA                LONGPOLE   float  180.0      [deg] The North Pole of standard system
 FITS.SBR.RA       RA         string UNKNOWN    RA of telescope pointing (HH:MM:SS.SSS)
 FITS.SBR.DEC      DEC        string UNKNOWN    DEC of telescope pointing (+/-DD:MM:SS.SS)
 FITS.SBR.EQUINOX  EQUINOX    string UNKNOWN    Standard FK5 (years) 
 FITS.SBR.TELFOCUS TELFOCUS   string UNKNOWN    Focus where a beam is reachable 
-FITS.SBR.FOC-VAL  FOC-VAL    float  0.0        Encoder value of the focus unit (mm)
 FITS.SBR.AIRMASS  AIRMASS    float  0.0        Typical air mass during exposure
-FITS.SBR.ZD       ZD         float  0.0        Zenith Distance at typical time (degree) 
+FITS.SBR.ZD       ZD         float  0.0        [deg] Zenith Distance at typical time
 #
-FITS.SBR.SEEING   SEEING     float  0.0        FWHM of star size at telescope focus (arcsec)
+FITS.SBR.M2-TYPE  M2-TYPE    string UNKNOWN    M2 type
+FITS.SBR.M2-POS1  M2-POS1    float  0.0	       [mm] M2 X position
+FITS.SBR.M2-POS2  M2-POS2    float  0.0	       [mm] M2 Y position
+FITS.SBR.M2-POS3  M2-POS3    float  0.0	       [mm] M2 Z position
+FITS.SBR.M2-ANG1  M2-ANG1    float  0.0	       [arcsec] M2 X position
+FITS.SBR.M2-ANG2  M2-ANG2    float  0.0	       [arcsec] M2 Y position
+FITS.SBR.M2-ANG3  M2-ANG3    float  0.0	       [arcsec] M2 Z position
+#
+FITS.SBR.INS-ROT  INS-STR    float  0.0	       [deg] Instrument rot pos, exp start
+FITS.SBR.INST-PA  INST-PA    float  0.0	       [deg] Inst pos angle at flange
+FITS.SBR.IMGROT   IMR-STR    float  0.0	       [deg] Image rotation, exp start
+FITS.SBR.IMR-TYP  IMR-TYP    string UNKNOWN    Instrument rotator type
+#
+FITS.SBR.ADC-TYPE ADC-TYP    string UNKNOWN    ADC name if used.
+FITS.SBR.ADC      ADC-STR    float 0.0	       [deg] ADC pos angle, exp start
+#
+FITS.SBR.SEEING   SEEING     float  0.0        [arcsec] FWHM of star size at telescope focus
 FITS.SBR.TRANSP   TRANSP     float  0.0        Sky transparency   
 FITS.SBR.WEATHER  WEATHER    string UNKNOWN    Weather condition (selected by observer)
 FITS.SBR.AZIMUTH  AZIMUTH    float  0.0        Azimuth of telescope pointing 
 FITS.SBR.ALTITUDE ALTITUDE   float  0.0        Altitude of telescope pointing                 
-FITS.SBR.ZD       ZD         float  0.0        Zenith distance at typical time
-FITS.SBR.AIRMASS  AIRMASS    float  0.0        Air Mass at start      
-FITS.SBR.TELFOCUS TELFOCUS   string UNKNOWN    Focus where a beam is reachable                
 FITS.PFS.FOC-POS  FOC-POS    string UNKNOWN    Focus where instrument is attached             
-FITS.SBR.FOC-VAL  FOC-VAL    float  0.0        Encoder value of the focus unit      
-FITS.SBR.AUTOGUID AUTOGUID   string UNKNOWN    Auto guide on/off 
-FITS.SBR.DOM-HUM  DOM-HUM    float  0.0        Dome humidity (  %)                              
-FITS.SBR.DOM-PRS  DOM-PRS    float  0.0        Dome pressure (hpa)                            
-FITS.SBR.DOM-TMP  DOM-TMP    float  0.0        Dome temperature (C)                           
-FITS.SBR.DOM-WND  DOM-WND    float  0.0        Dome wind speed (m/sec)                        
-FITS.SBR.OUT-HUM  OUT-HUM    float  0.0        Outside humidity (  %)                           
-FITS.SBR.OUT-PRS  OUT-PRS    float  0.0        Outside pressure (hpa)                         
-FITS.SBR.OUT-TMP  OUT-TMP    float  0.0        Outside temperature (C)                        
-FITS.SBR.OUT-WND  OUT-WND    float  0.0        Outside wind speed (m/sec)                     
+FITS.SBR.FOC-VAL  FOC-VAL    float  0.0        [mm] Encoder value of the focus unit      
+FITS.SBR.AUTOGUID AUTOGUID   string UNKNOWN    Auto guide on/off
+#
+FITS.SBR.DOM-HUM  DOM-HUM    float  0.0        [%] Dome humidity
+FITS.SBR.DOM-PRS  DOM-PRS    float  0.0        [hPa] Dome pressure                            
+FITS.SBR.DOM-TMP  DOM-TMP    float  0.0        [degC] Dome temperature
+FITS.SBR.DOM-WND  DOM-WND    float  0.0        [m-s^-1] Dome wind speed                        
+FITS.SBR.OUT-HUM  OUT-HUM    float  0.0        [%] Outside humidity
+FITS.SBR.OUT-PRS  OUT-PRS    float  0.0        [hPa] Outside pressure
+FITS.SBR.OUT-TMP  OUT-TMP    float  0.0        [degC] Outside temperature
+FITS.SBR.OUT-WND  OUT-WND    float  0.0        [m-s^-1] Outside wind speed                     
