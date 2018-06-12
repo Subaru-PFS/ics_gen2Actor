@@ -94,13 +94,19 @@ class PFS(BASECAM):
             raise PFSError("cannot open %s" % str(inlist))
 
         def convertFloat(raw):
-            if isinstance(raw,str):
-                raw = raw.strip()
+            # Subaru convention
+            if raw == "##NODATA##":
+                return raw
             return float(raw)
+
         def convertInt(raw):
-            if isinstance(raw,str):
-                raw = raw.strip()
-            return int(raw, base=10)
+            # Subaru convention
+            if raw == "##NODATA##":
+                return raw
+            if isinstance(raw, str):
+                return int(raw, base=10)
+            else:
+                return int(raw)
 
         StatAlias_list = []
         FitsKey_list = []
