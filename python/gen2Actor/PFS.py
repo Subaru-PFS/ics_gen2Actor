@@ -93,6 +93,15 @@ class PFS(BASECAM):
         except IOError:
             raise PFSError("cannot open %s" % str(inlist))
 
+        def convertFloat(raw):
+            if isinstance(raw,str):
+                raw = raw.strip()
+            return float(raw)
+        def convertInt(raw):
+            if isinstance(raw,str):
+                raw = raw.strip()
+            return int(raw, base=10)
+
         StatAlias_list = []
         FitsKey_list = []
         FitsType_list = []
@@ -107,10 +116,15 @@ class PFS(BASECAM):
                 FitsType = param[2]
                 if FitsType == 'string':
                     FitsDefault = param[3]
+                    FitsType = str
                 elif FitsType == 'float':
                     FitsDefault = float(param[3])
+                    FitsType = convertFloat
                 elif FitsType == 'int':
                     FitsDefault = int(param[3])
+                    FitsType = convertInt
+                else:
+                    raise TypeError('unknown fits card type: %s' % (FitsType))
 
                 FitsComment = ""
                 for i in range(len(param)):
@@ -364,7 +378,6 @@ class PFS(BASECAM):
         # lst_fmt = '%02d:%02d:%06.3f' % (lst[0],lst[1],lst[2])
         # hdr.set('LST-END',lst_fmt, "HH:MM:SS.SS LST at exposure end")
 
-        # frame ID
         hdr.set('FRAMEID',frameid, "Image sequential number")
         if frameid.startswith('PFS'):
             try:
@@ -374,86 +387,29 @@ class PFS(BASECAM):
                 visit = 0
             hdr.set('W_VISIT', visit, 'PFS visit')
 
-        # readout mode
-        # if mode == 0:
-        #     if itime == 0:
-        #         hdr.set('DATA-TYP','BIAS', "Type / Characteristics of this data")
-        #     else:
-        #         hdr.set('DATA-TYP','OBJECT', "Type / Characteristics of this data")
-        # elif mode == 1:
-        #         hdr.set('DATA-TYP','DARK', "Type / Characteristics of this data")
-        # else:
-        #     hdr.set('DATA-TYP','UNKNOWN')
-
-        # exposure time 
+        # exposure time
         hdr.set('EXPTIME',float(itime), "[sec] Total integration time of the frame")
-        hdr.set('DATA-TYP', mode, "Subaru-style exp. type")
-        hdr.set('IMAGETYP', mode, "non-Subaru-style exp. type")
+        hdr.set('DATA-TYP', mode.upper(), "Subaru-style exp. type")
+        hdr.set('IMAGETYP', mode.upper(), "non-Subaru-style exp. type")
 
         if fullHeader is False:
             return hdr
 
-        # detector temperature (TBD)
-        # hdr.set('DET-TMP', 0.0, "Detector temperature (K)")
-
-        # Telescope header 
-        for i in range(len(self.tel_header)):
-            if self.tel_header[i][0] == 'NA':
-                hdr.set(self.tel_header[i][1], self.tel_header[i][3], self.tel_header[i][4])
+        # Telescope header
+        for hdr1 in self.tel_header:
+            name = hdr1[1]
+            comment = hdr1[4]
+            if hdr1[0] == 'NA':
+                hdr.set(name, hdr1[3], comment)
             else:
-                hdr.set(self.tel_header[i][1],
-                        self.statusDictTel[self.tel_header[i][0]],
-                        self.tel_header[i][4])
+                val = self.statusDictTel[hdr1[0]]
+                valType = hdr1[2]
+                try:
+                    val = valType(val)
+                except:
+                    hdr.add_comment(f'FAILED to convert {name}:{val} as a {valType}')
 
-        # WCS parameters 
-        # convert ra/dec to degrees 
-        ra = self.statusDictTel['FITS.SBR.RA']
-        dec = self.statusDictTel['FITS.SBR.DEC']
-        ra_param = ra.split(":")
-        ra_deg = 15.0*(float(ra_param[0]) + float(ra_param[1])/60.0 + float(ra_param[2])/3600.0)
-        dec_param = dec.split(":")
-        if dec_param[0].find("-") == -1:
-            dec_deg = float(dec_param[0]) + float(dec_param[1])/60.0 + float(dec_param[2])/3600.0
-        else:
-            dec_deg = float(dec_param[0]) - float(dec_param[1])/60.0 - float(dec_param[2])/3600.0
-
-        if False:
-            imrpad = float(self.statusDictAO['AON.IMR.PAD']) # degrees
-            sin_pa = math.sin(imrpad * math.pi / 180.0)
-            cos_pa = math.cos(imrpad * math.pi / 180.0)
-
-            pixscale = 1.54321e-5 # degrees
-            cd1_1 = pixscale * bin * sin_pa
-            cd1_2 = -pixscale * bin * cos_pa
-            cd2_1 = pixscale * bin * cos_pa
-            cd2_2 = pixscale * bin * sin_pa
-            cdelta1 = pixscale
-            cdelta2 = pixscale
-            pc001001 = -sin_pa
-            pc001002 = cos_pa
-            pc002001 = -cos_pa
-            pc002002 = -sin_pa
-            hdr.set('OBS-MOD', 'IMAG')
-
-            hdr.set('CRVAL1', ra_deg, 'Physical value of the reference pixel X')
-            hdr.set('CRVAL2', dec_deg, 'Physical value of the reference pixel Y')
-            hdr.set('CRPIX1', 2140.0, 'Reference pixel in X (pixel)')
-            hdr.set('CRPIX2', 1064.0, 'Reference pixel in Y (pixel)')
-            hdr.set('CTYPE1', 'RA---TAN', 'Units used in both CRVAL1 and CDELT1')
-            hdr.set('CTYPE2', 'DEC--TAN', 'Units used in both CRVAL2 and CDELT2')
-            hdr.set('CUNIT1', 'degree', 'Units used in both CRVAL1 and CDELT1')
-            hdr.set('CUNIT2', 'degree', 'Units used in both CRVAL2 and CDELT2')
-            hdr.set('CDELT1', cdelta1, 'Size projected into a detector pixel X')
-            hdr.set('CDELT2', cdelta2, 'Size projected into a detector pixel Y')
-            hdr.set('PC001001', pc001001, 'Pixel Coordinate translation matrix')
-            hdr.set('PC001002', pc001002, 'Pixel Coordinate translation matrix')
-            hdr.set('PC002001', pc002001, 'Pixel Coordinate translation matrix')
-            hdr.set('PC002002', pc002002, 'Pixel Coordinate translation matrix')
-            hdr.set('CD1_1', cd1_1, 'Pixel Coordinate translation matrix')
-            hdr.set('CD1_2', cd1_2, 'Pixel Coordinate translation matrix')
-            hdr.set('CD2_1', cd2_1, 'Pixel Coordinate translation matrix')
-            hdr.set('CD2_2', cd2_2, 'Pixel Coordinate translation matrix')
-
+                hdr.set(name, val, comment)
 
         return hdr
 
