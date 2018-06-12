@@ -27,7 +27,9 @@ FITS.SBR.M2-POS3  M2-POS3    float  0.0	       [mm] M2 Z position
 FITS.SBR.M2-ANG1  M2-ANG1    float  0.0	       [arcsec] M2 X position
 FITS.SBR.M2-ANG2  M2-ANG2    float  0.0	       [arcsec] M2 Y position
 FITS.SBR.M2-ANG3  M2-ANG3    float  0.0	       [arcsec] M2 Z position
-#
+FITS.PFU.OFFSET-X W_M2OFF1   float  0.0	       [mm] M2 X offset
+FITS.PFU.OFFSET-Y W_M2OFF2   float  0.0	       [mm] M2 Y offset
+FITS.PFU.OFFSET-Z W_M2OFF3   float  0.0	       [mm] M2 Z offset
 FITS.SBR.INS-ROT  INS-STR    float  0.0	       [deg] Instrument rot pos, exp start
 FITS.SBR.INST-PA  INST-PA    float  0.0	       [deg] Inst pos angle at flange
 FITS.SBR.IMGROT   IMR-STR    float  0.0	       [deg] Image rotation, exp start
