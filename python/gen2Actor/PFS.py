@@ -393,7 +393,6 @@ class PFS(BASECAM):
         # exposure time
         hdr.set('EXPTIME',float(itime), "[sec] Total integration time of the frame")
         hdr.set('DATA-TYP', mode.upper(), "Subaru-style exp. type")
-        hdr.set('IMAGETYP', mode.upper(), "non-Subaru-style exp. type")
 
         if fullHeader is False:
             return hdr
