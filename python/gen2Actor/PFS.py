@@ -5,10 +5,7 @@
 #
 """This file implements the Gen2 client interface for the Prime Focus Spectrograph.
 """
-from future import standard_library; standard_library.install_aliases()
-from builtins import zip
-from builtins import str
-from builtins import range
+
 from importlib import reload
 import logging
 import math
@@ -597,57 +594,6 @@ class PFS(BASECAM):
         # before terminating the command.
         self.logger.info("Submitting framelist '%s'" % str(framelist))
         self.ocs.archive_framelist(framelist)
-
-    def ramp(self, tag=None, exptype='TEST', exptime=0.0,
-             nreset=1, nread=2, nramp=1,
-             objname=None, target=None):
-        """ trigger the start of a ramp, and handle the output.
-
-        Args
-        ----
-        tag : str
-           Internal OCS/Gen2 command ID.
-        exptype : {'DARK', 'OBJECT', 'TEST'}
-           What turns into the IMAGETYP
-        objname : str
-           This turns into the OBJECT card.
-
-        """
-
-        subtag = self._subtag(tag)
-
-        if nread > 0 and exptime > 0:
-            raise CamCommandError('Either exptime OR nread can be set. Not both.')
-
-        frames = self.reqframes(type=self.frameType)
-        seqno = int(frames[0][4:])
-
-        self.ocs.setvals(subtag, task_start=time.time(),
-                         cmd_str="Taking a %s ramp(%s, %s)" % (exptype, nreset, nread))
-
-        def statusCB(subtag, msg):
-            filenameIdx = msg.find(' filename=')
-            if filenameIdx >= 0:
-                self.archivePfsFile(msg[filenameIdx+11:-2])
-
-        if nread > 0:
-            readArg = "nread=%d" % (nread)
-            timelim = (nread + nreset)*1.5 + 20
-        else:
-            readArg = "itime=%0.1f" % (exptime)
-            timelim = nreset*1.5 + exptime + 20
-
-        if '"' in objname or "'" in objname:
-            raise CamCommandError('sorry, but Craig cannot handle quotes in object names just yet')
-
-        self.execOneCmd('hx',
-                        'ramp nreset=%d %s seqno=%d exptype=%s nramp=%s objname=%r' %
-                        (nreset, readArg, seqno, exptype, nramp, pipes.quote(objname)),
-                        timelim=timelim, subtag=subtag, callback=statusCB)
-        self.logger.info("took a %s ramp(%s, %s)" % (exptype, nreset, nread))
-
-        self.ocs.setvals(subtag, task_end=time.time(),
-                         cmd_str="Done with ramp")
 
     def putstatus(self, target="ALL"):
         """Forced export of our status.
