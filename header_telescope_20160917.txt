@@ -12,7 +12,7 @@ FITS.PFS.OBS-ALOC OBS-ALOC   string UNKNOWN    Observation or Standby
 FITS.PFS.OBS-MOD  OBS-MOD    string UNKNOWN    Observation Mode
 FITS.SBR.DATE-OBS DATE-OBS   string UNKNOWN    UT date of Observation (yyyy-mm-dd) 
 #
-NA                RADECYS    string FK5        The equatorial coordinate system
+NA                RADESYS    string FK5        The equatorial coordinate system
 NA                LONPOLE    float  180.0      [deg] The North Pole of standard system
 FITS.SBR.RA       RA         string UNKNOWN    RA of telescope pointing (HH:MM:SS.SSS)
 FITS.SBR.DEC      DEC        string UNKNOWN    DEC of telescope pointing (+/-DD:MM:SS.SS)
