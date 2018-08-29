@@ -12,8 +12,7 @@ __all__ = ['pfsDribble',
            'mcsexpose',
            'getPfsVisit',
            'archivePfsFile',
-           '_frameToVisit',
-           '_getNextVisit']
+           '_frameToVisit']
 
 def _runPfsCmd(self, actor, cmdStr, tag, timeLim=30.0, callFunc=None):
     """ Run one MHS command, and report back to tag.
@@ -131,54 +130,13 @@ def mcsexpose(self, tag=None, exptype='bias', exptime=0.0):
 def _frameToVisit(self, frame):
     return int(frame[4:4+6], base=10), int(frame[10:12], base=10)
 
-def _getNextVisit(self, camId):
-    """ For the given camId, get the next proper PFS visit, where the Gen2 frame%100 == 0 """
+def getPfsVisit(self):
+    """ Return a PFS visit ID, wrapping the standard .reqframes() """
 
-    frame = self.reqframes(num=1, type=camId)[0]
+    frame = self.reqframes(num=100)[0]
     visit, rest = self._frameToVisit(frame)
 
-    # If our frame # does not end with 00, request up to the next one which does
-    if rest != 0:
-        fillIn = self.reqframes(num=99-rest+1, type=camId)
-        self.logger.warn(f'frame for {camId} is not %100==0 {frame}. Catching up to {fillIn[-1]}')
-        frame = fillIn[-1]
-        visit, rest = self._frameToVisit(frame)
-        if rest != 0:
-            raise RuntimeError(f'frame catchup to 100 for {camId} botch: {frame}')
-
-    fillIn = self.reqframes(num=99, type=camId)
-    visit2, rest2 = self._frameToVisit(fillIn[-1])
-    if visit != visit2 or rest2 != 99:
-        raise RuntimeError(f'frame discard to 100 for {camId} botch: {frame} vs {fillIn[-1]}')
-
     return visit
-
-def getPfsVisit(self):
-    """ Return a PFS visit ID, wrapping the standard .reqframes()
-
-    reqframes() returns N filename(s) for a given prefix ("PFSA")
-    We have four prefixes (PFS[ABCD]) and always use frames by the 100.
-
-    That will eventually be handled by some Gen2 wrapper. For now, do it ourselves.
-    """
-
-    camIds = 'A', 'B', 'C', 'D'
-
-    visits = {}
-    for camId in camIds:
-        visits[camId] = self._getNextVisit(camId)
-
-    # Now make sure that all camIds have the same visit. If not,
-    # request and discard chunks of 100 until all match.
-    if not all([visits[c] == visits[camIds[0]] for c in camIds[1:]]):
-        ordered = [(camId, visits[camId]) for camId in sorted(visits, key=visits.get, reverse=True)]
-        camToMatch, visitToMatch = ordered[0]
-        for camId, visit in ordered[1:]:
-            for i in range(visitToMatch-visit):
-                self.logger.warn(f'bumping {camId} {visit} to match {camToMatch}, {visitToMatch}')
-                visits[camId] = self._getNextVisit(camId)
-
-    return visits[camIds[0]]
 
 def archivePfsFile(self, pathname):
     filename = os.path.basename(pathname)
