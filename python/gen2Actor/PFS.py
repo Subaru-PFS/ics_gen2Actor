@@ -382,6 +382,7 @@ class PFS(BASECAM):
         # hdr.set('LST-END',lst_fmt, "HH:MM:SS.SS LST at exposure end")
 
         hdr.set('FRAMEID',frameid, "Image sequential number")
+        hdr.set('EXP-ID',frameid, "Image sequential number")
         if frameid.startswith('PFS'):
             try:
                 frameid = frameid[4:]
