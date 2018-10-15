@@ -344,13 +344,13 @@ class PFS(BASECAM):
         hst_start_str = hst_start.strftime('%H:%M:%S.%f')[:-3]
         hst_end_str = hst_end.strftime('%H:%M:%S.%f')[:-3]
 
-        hdr.set('DATE-OBS',date_obs_str, "Observation start date (yyyy-mm-dd)")
-        hdr.set('UT', utc_start_str, "HH:MM:SS.SS typical UTC at exposure")
-        hdr.set('UT-STR', utc_start_str, "HH:MM:SS.SS UTC at exposure start")
-        hdr.set('UT-END', utc_end_str, "HH:MM:SS.SS UTC at exposure end")
-        hdr.set('HST', hst_start_str, "HH:MM:SS.SS typical HST at exposure")
-        hdr.set('HST-STR', hst_start_str, "HH:MM:SS.SS HST at exposure start")
-        hdr.set('HST-END', hst_end_str, "HH:MM:SS.SS HST at exposure end")
+        hdr.set('DATE-OBS',date_obs_str, "Observation start date")
+        hdr.set('UT', utc_start_str, "[HMS] Typical UTC at exposure")
+        hdr.set('UT-STR', utc_start_str, "[HMS] UTC at exposure start")
+        hdr.set('UT-END', utc_end_str, "[HMS] UTC at exposure end")
+        hdr.set('HST', hst_start_str, "[HMS] Typical HST at exposure")
+        hdr.set('HST-STR', hst_start_str, "[HMS] HST at exposure start")
+        hdr.set('HST-END', hst_end_str, "[HMS] HST at exposure end")
 
         # calculate MJD
         t_start = Time(utc_start, scale='utc')

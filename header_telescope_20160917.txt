@@ -7,24 +7,24 @@ NA		  DETECTOR   string MCS	    Metrology Camera
 FITS.PFS.PROP-ID  PROP-ID    string UNKNOWN    Proposal ID                                    
 FITS.PFS.OBSERVER OBSERVER   string UNKNOWN    Observer
 # 
-FITS.PFS.OBJECT   OBJECT     string UNKNOWN    Object                                         
+FITS.PFS.OBJECT   OBJECT     string UNKNOWN    Object name
 FITS.PFS.OBS-ALOC OBS-ALOC   string UNKNOWN    Observation or Standby                         
 FITS.PFS.OBS-MOD  OBS-MOD    string UNKNOWN    Observation Mode
 FITS.SBR.DATE-OBS DATE-OBS   string UNKNOWN    UT date of Observation (yyyy-mm-dd) 
 #
 NA                RADESYS    string FK5        The equatorial coordinate system
 NA                LONPOLE    float  180.0      [deg] The North Pole of standard system
-FITS.SBR.RA       RA         string UNKNOWN    RA of telescope pointing (HH:MM:SS.SSS)
-FITS.SBR.DEC      DEC        string UNKNOWN    DEC of telescope pointing (+/-DD:MM:SS.SS)
-FITS.SBR.RA       RA2000     string UNKNOWN    RA of telescope pointing (HH:MM:SS.SSS)
-FITS.SBR.DEC      DEC2000    string UNKNOWN    DEC of telescope pointing (+/-DD:MM:SS.SS)
-FITS.SBR.EQUINOX  EQUINOX    float  UNKNOWN    Standard FK5 (years) 
-FITS.SBR.TELFOCUS TELFOCUS   string UNKNOWN    Focus where a beam is reachable 
+FITS.SBR.RA       RA         string UNKNOWN    [HMS] RA of telescope pointing
+FITS.SBR.DEC      DEC        string UNKNOWN    [DMS] DEC of telescope pointing
+FITS.SBR.RA       RA2000     string UNKNOWN    [HMS] RA of telescope pointing
+FITS.SBR.DEC      DEC2000    string UNKNOWN    [DMS] DEC of telescope pointing
+FITS.SBR.EQUINOX  EQUINOX    float  2000.0     [year] Standard FK5
+FITS.SBR.TELFOCUS TELFOCUS   string UNKNOWN    Focus where a beam is reachable
 FITS.SBR.AIRMASS  AIRMASS    float  0.0        Typical air mass during exposure
 FITS.SBR.ZD       ZD         float  0.0        [deg] Zenith Distance at typical time
 #
-FITS.SBR.AZIMUTH  AZIMUTH    float  0.0        Azimuth of telescope pointing 
-FITS.SBR.ALTITUDE ALTITUDE   float  0.0        Altitude of telescope pointing                 
+FITS.SBR.AZIMUTH  AZIMUTH    float  0.0        [deg] Azimuth of telescope pointing
+FITS.SBR.ALTITUDE ALTITUDE   float  0.0        [deg] Altitude of telescope pointing
 FITS.PFS.FOC-POS  FOC-POS    string UNKNOWN    Focus where instrument is attached             
 FITS.SBR.FOC-VAL  FOC-VAL    float  0.0        [mm] Encoder value of the focus unit      
 FITS.SBR.IMR-TYP  IMR-TYP    string UNKNOWN    Instrument rotator type
@@ -55,8 +55,8 @@ FITS.SBR.WEATHER  WEATHER    string UNKNOWN    Weather condition (selected by ob
 FITS.SBR.DOM-HUM  DOM-HUM    float  0.0        [%] Dome humidity
 FITS.SBR.DOM-PRS  DOM-PRS    float  0.0        [hPa] Dome pressure                            
 FITS.SBR.DOM-TMP  DOM-TMP    float  0.0        [K] Dome temperature
-FITS.SBR.DOM-WND  DOM-WND    float  0.0        [m-s^-1] Dome wind speed                        
+FITS.SBR.DOM-WND  DOM-WND    float  0.0        [m/s] Dome wind speed
 FITS.SBR.OUT-HUM  OUT-HUM    float  0.0        [%] Outside humidity
 FITS.SBR.OUT-PRS  OUT-PRS    float  0.0        [hPa] Outside pressure
 FITS.SBR.OUT-TMP  OUT-TMP    float  0.0        [K] Outside temperature
-FITS.SBR.OUT-WND  OUT-WND    float  0.0        [m-s^-1] Outside wind speed                     
+FITS.SBR.OUT-WND  OUT-WND    float  0.0        [m/s] Outside wind speed
