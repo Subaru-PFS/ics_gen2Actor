@@ -308,13 +308,6 @@ class PFS(BASECAM):
         self.logger.info('updating telescope info')
         self.ocs.requestOCSstatus(self.statusDictTel)
 
-        self.logger.info('fetching header...')
-        hdr = self.fetch_header('here', 9999, 1, 4.5, datetime.utcnow())
-        phdu = pyfits.PrimaryHDU(header=hdr)
-
-        self.logger.info('writing file...')
-        phdu.writeto('/tmp/foo_2.fits', clobber=True, checksum=True)
-
     def return_new_header(self, frameid, mode, itime, fullHeader=True):
         """ Update the external data feeding our headers and generate one. """
 
