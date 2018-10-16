@@ -310,11 +310,11 @@ class PFS(BASECAM):
         self.logger.info('updating telescope info')
         self.ocs.requestOCSstatus(self.statusDictTel)
 
-    def return_new_header(self, frameid, mode, itime, fullHeader=True):
+    def return_new_header(self, frameid, mode, itime, fullHeader=True, doUpdate=True):
         """ Update the external data feeding our headers and generate one. """
 
-        self.logger.info('updating telescope info')
-        self.ocs.requestOCSstatus(self.statusDictTel)
+        if doUpdate:
+            self.update_header_stat()
 
         self.logger.info('fetching header...')
         try:

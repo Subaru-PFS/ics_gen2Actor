@@ -75,6 +75,8 @@ class Gen2Cmd(object):
         expTime = cmdKeys['expTime'].values[0]
         expType = cmdKeys['expType'].values[0]
 
+        self.actor._genActorKeys(cmd)
+
         # Hack to enforce INSTRM-351 temporarily. For shame, CPL
         #
         if not frameId.startswith('PFS'):
