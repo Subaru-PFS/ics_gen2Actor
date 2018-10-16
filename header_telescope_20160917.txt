@@ -30,7 +30,6 @@ FITS.SBR.FOC-VAL  FOC-VAL    float  0.0        [mm] Encoder value of the focus u
 FITS.SBR.IMR-TYP  IMR-TYP    string UNKNOWN    Instrument rotator type
 FITS.SBR.INST-PA  INST-PA    float  0.0	       [deg] Inst pos angle at flange
 FITS.SBR.INSROT   INR-STR    float  0.0	       [deg] Instrument rot pos, exp start
-FITS.SBR.IMGROT   IMR-STR    float  0.0	       [deg] Image rotation, exp start
 #
 FITS.SBR.M2-TYPE  M2-TYPE    string UNKNOWN    M2 type
 FITS.SBR.M2-POS1  M2-POS1    float  0.0	       [mm] M2 X position
