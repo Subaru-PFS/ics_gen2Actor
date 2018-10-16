@@ -376,14 +376,15 @@ class PFS(BASECAM):
         # lst_fmt = '%02d:%02d:%06.3f' % (lst[0],lst[1],lst[2])
         # hdr.set('LST-END',lst_fmt, "HH:MM:SS.SS LST at exposure end")
 
-        hdr.set('FRAMEID',frameid, "Image sequential number")
-        hdr.set('EXP-ID',frameid, "Image sequential number")
+        hdr.set('FRAMEID', frameid, "Image ID")
         if frameid.startswith('PFS'):
             try:
-                frameid = frameid[4:]
-                visit = int(frameid[:6], base=10)
+                framenum = frameid[4:]
+                visit = int(framenum[:6], base=10)
             except:
                 visit = 0
+            hdr.set('EXP-ID', '%sE%06d00' % (frameid[:3], visit),
+                    "Exposure/visit ID")
             hdr.set('W_VISIT', visit, 'PFS visit')
 
         # exposure time
