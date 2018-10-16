@@ -60,7 +60,7 @@ class OurActor(actorcore.Actor.Actor):
         cmd.inform(f'tel_focus={gk("TELFOCUS")},{gk("FOC-VAL")}')
         cmd.inform(f'tel_axes={gk("AZIMUTH")},{gk("ALTITUDE")}')
         cmd.inform(f'tel_rot={gk("INST-PA")},{gk("INR-STR")}')
-        cmd.inform(f'tel_adc={gk("ADC-TYP")},{gk("ADC-STR")}')
+        cmd.inform(f'tel_adc={gk("ADC-TYPE")},{gk("ADC-STR")}')
         cmd.inform(f'dome_env={gk("DOM-HUM")},{gk("DOM-PRS")},{gk("DOM-TMP")},{gk("DOM-WND")}')
         cmd.inform(f'outside_env={gk("OUT-HUM")},{gk("OUT-PRS")},{gk("OUT-TMP")},{gk("OUT-WND")}')
 

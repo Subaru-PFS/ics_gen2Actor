@@ -2,7 +2,6 @@ NA                OBSERVAT   string NAOJ    Observatory
 NA                TELESCOP   string Subaru  Telescope/System which Inst. is attached
 NA                INSTRUME   string PFS     Instrument name
 NA                TIMESYS    string UTC     Time System used in the header
-NA		  DETECTOR   string MCS	    Metrology Camera
 #
 FITS.PFS.PROP-ID  PROP-ID    string UNKNOWN    Proposal ID                                    
 FITS.PFS.OBSERVER OBSERVER   string UNKNOWN    Observer
@@ -42,8 +41,8 @@ FITS.PFU.OFFSET-X W_M2OFF1   float  0.0	       [mm] M2 X offset
 FITS.PFU.OFFSET-Y W_M2OFF2   float  0.0	       [mm] M2 Y offset
 FITS.PFU.OFFSET-Z W_M2OFF3   float  0.0	       [mm] M2 Z offset
 #
-FITS.SBR.ADC-TYPE ADC-TYP    string UNKNOWN    ADC name if used.
-FITS.SBR.ADC      ADC-STR    float 0.0	       [deg] ADC pos angle, exp start
+FITS.SBR.ADC-TYPE ADC-TYPE   string UNKNOWN    ADC name if used.
+FITS.SBR.ADC      ADC-STR    float 0.0	       [deg] ADC PA at exposure start
 #
 FITS.SBR.AUTOGUID AUTOGUID   string UNKNOWN    Auto guide on/off
 #
