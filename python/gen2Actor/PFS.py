@@ -144,7 +144,9 @@ class PFS(BASECAM):
                 FitsComment_list.append(FitsComment)
                 header_num += 1
 
-        header = list(zip(StatAlias_list, FitsKey_list, FitsType_list, FitsDefault_list, FitsComment_list))
+        header = dict(zip(FitsKey_list,
+                          zip(StatAlias_list, FitsKey_list,
+                              FitsType_list, FitsDefault_list, FitsComment_list)))
 
         fin.close()
 
@@ -152,9 +154,9 @@ class PFS(BASECAM):
 
     def init_stat_dict(self, header):
         statusDict = {}
-        for i in range(len(header)):
-            if header[i][0] != 'NA':
-                statusDict[header[i][0]] = header[i][3]
+        for name, card in header.items():
+            if card[0] != 'NA':
+                statusDict[card[0]] = card[3]
         return statusDict
 
     def initialize(self, ocsint):
@@ -308,11 +310,11 @@ class PFS(BASECAM):
         self.logger.info('updating telescope info')
         self.ocs.requestOCSstatus(self.statusDictTel)
 
-    def return_new_header(self, frameid, mode, itime, fullHeader=True):
+    def return_new_header(self, frameid, mode, itime, fullHeader=True, doUpdate=True):
         """ Update the external data feeding our headers and generate one. """
 
-        self.logger.info('updating telescope info')
-        self.ocs.requestOCSstatus(self.statusDictTel)
+        if doUpdate:
+            self.update_header_stat()
 
         self.logger.info('fetching header...')
         try:
@@ -392,7 +394,7 @@ class PFS(BASECAM):
             return hdr
 
         # Telescope header
-        for hdr1 in self.tel_header:
+        for name, hdr1 in self.tel_header.items():
             name = hdr1[1]
             comment = hdr1[4]
             if hdr1[0] == 'NA':

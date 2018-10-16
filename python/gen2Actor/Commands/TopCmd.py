@@ -59,8 +59,9 @@ class TopCmd(object):
     def status(self, cmd):
         """Report camera status and actor version. """
 
-        self.actor.sendVersionKey(cmd)
-        
         cmd.inform('text="Present!"')
+        self.actor.sendVersionKey(cmd)
+        self.actor._genActorKeys(cmd)
+
         cmd.finish()
 

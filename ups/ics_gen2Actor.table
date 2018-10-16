@@ -1,4 +1,5 @@
 setupRequired(tron_actorcore)
+setupRequired(ics_actorkeys)
 
 pathPrepend(PYTHONPATH, ${PRODUCT_DIR}/g2cam)
 pathPrepend(PYTHONPATH, ${PRODUCT_DIR}/python)
