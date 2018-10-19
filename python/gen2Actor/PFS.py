@@ -14,6 +14,7 @@ import re
 import threading
 from datetime import datetime, timedelta
 import pipes
+import base64
 
 import subprocess
 
@@ -325,7 +326,7 @@ class PFS(BASECAM):
             self.logger.warn('failed to fetch header: %s', e)
             hdr = pyfits.Header()
 
-        return hdr.tostring()
+        return base64.b64encode(hdr.tostring().encode('latin-1')).decode('latin-1')
 
     def fetch_header(self, frameid, mode, itime, utc_start,
                      fullHeader=True):
