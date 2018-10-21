@@ -24,6 +24,7 @@ class Gen2Cmd(object):
         self.vocab = [
             ('getVisit', '', self.getVisit),
             ('gen2Reload', '', self.gen2Reload),
+            ('archive', '<pathname>', self.archive),
             ('getFitsCards', '<frameId> <expTime> <expType>', self.getFitsCards),
         ]
 
@@ -33,6 +34,8 @@ class Gen2Cmd(object):
                                                  help=''),
                                         keys.Key("cam", types.String(),
                                                  help='camera name, e.g. r1'),
+                                        keys.Key("pathname", types.String(),
+                                                 help='full path for a file'),
                                         keys.Key("cnt", types.Int(),
                                                  help='a count'),
                                         keys.Key("expType",
@@ -69,6 +72,14 @@ class Gen2Cmd(object):
         gen2.statusDictTel = gen2.init_stat_dict(gen2.tel_header)
         cmd.finish()
 
+    def archive(self, cmd):
+        """ Archive a FITS foe the STARS. """
+        pathname = cmd.cmd.keywords['pathname'].values[0]
+        gen2 = self.actor.gen2
+
+        gen2.archivePfsFile(pathname)
+        cmd.finish(f'text="registered {pathname} for archiving"')
+        
     def getFitsCards(self, cmd):
         """ Query for all TSC and observatory FITS cards. """
 
