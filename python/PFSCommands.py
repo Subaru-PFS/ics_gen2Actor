@@ -104,8 +104,9 @@ def keyFromReply(self, cmdReply, keyName):
             if keyName == k.name:
                 return k
 
-def mcsexpose(self, tag=None, exptype='bias', exptime=0.0):
+def mcsexpose(self, tag=None, exptype='bias', exptime=0.0, docentroid='FALSE'):
     exptype = exptype.lower()
+    docentroid = docentroid.lower()
     exptime = float(exptime)
 
     subtag = self._subtag(tag)
@@ -113,12 +114,17 @@ def mcsexpose(self, tag=None, exptype='bias', exptime=0.0):
     self.ocs.setvals(subtag, task_start=time.time(),
                      cmd_str=f'Starting {exptype} exposure')
 
+    if exptype in {'object', 'test'} and docentroid == 'true':
+        doCentroidArg = "doCentroid"
+    else:
+        doCentroidArg = ""
+
     if exptype == 'bias':
         ret = self.pfscmd(tag=tag, actor='mcs',
                           cmd='expose bias')
     else:
         ret = self.pfscmd(tag=tag, actor='mcs',
-                          cmd=f'expose {exptype} expTime={exptime}')
+                          cmd=f'expose {exptype} expTime={exptime} {doCentroidArg}')
 
     filename = self.keyFromReply(ret, 'filename').values[0]
     self.logger.warn('########### filename: %s' % filename)
