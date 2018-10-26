@@ -30,7 +30,7 @@ def _runPfsCmd(self, actor, cmdStr, tag, timeLim=30.0, callFunc=None):
       Called as callFunc(replyLine, tag=tag)
     """
 
-    self.logger.info(f'dispatching MHS command: {actor} {cmdStr}')
+    self.logger.info(f'dispatching MHS command with timeLim {timeLim}: {actor} {cmdStr}')
     if callFunc is None:
         ret = self.actor.cmdr.call(actor=actor,
                                    cmdStr=cmdStr,
@@ -61,7 +61,7 @@ def pfsDribble(self, reply, tag=None):
     self.ocs.setvals(tag, cmd_str=str(reply.lastReply))
     time.sleep(0.1)
 
-def pfscmd(self, tag=None, actor=None, cmd=None, callFunc=None, keyVars=None):
+def pfscmd(self, tag=None, actor=None, cmd=None, callFunc=None, timeLim=None, keyVars=None):
     """ Send an arbitrary command to an arbitrary actor.
 
     Args
@@ -90,7 +90,7 @@ def pfscmd(self, tag=None, actor=None, cmd=None, callFunc=None, keyVars=None):
 
     self.ocs.setvals(subtag, task_start=time.time(),
                      cmd_str=f'calling {actor} {cmd} ...')
-    ret = self._runPfsCmd(actor, cmd, subtag, callFunc=callFunc)
+    ret = self._runPfsCmd(actor, cmd, subtag, timeLim=timeLim, callFunc=callFunc)
 
     if callFunc is None:
         lines = [str(l) for l in ret.replyList]
@@ -124,7 +124,8 @@ def mcsexpose(self, tag=None, exptype='bias', exptime=0.0, docentroid='FALSE'):
                           cmd='expose bias')
     else:
         ret = self.pfscmd(tag=tag, actor='mcs',
-                          cmd=f'expose {exptype} expTime={exptime} {doCentroidArg}')
+                          cmd=f'expose {exptype} expTime={exptime} {doCentroidArg}',
+                          timeLim = exptime + 15)
 
     filename = self.keyFromReply(ret, 'filename').values[0]
     self.logger.warn('########### filename: %s' % filename)

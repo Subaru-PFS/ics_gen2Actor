@@ -95,6 +95,7 @@ class Gen2Cmd(object):
         if not frameId.startswith('PFS'):
             frameId = 'PFSC%06d00' % (int(frameId, base=10))
 
-        hdr = self.actor.gen2.return_new_header(frameId, expType, expTime)
+        hdr = self.actor.gen2.return_new_header(frameId, expType, expTime,
+                                                doUpdate=False)
         cmd.inform('header=%s' % (repr(hdr)))
         cmd.finish()
