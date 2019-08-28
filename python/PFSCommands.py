@@ -12,7 +12,20 @@ __all__ = ['pfsDribble',
            'mcsexpose',
            'getPfsVisit',
            'archivePfsFile',
+           'newFilePath',
            '_frameToVisit']
+
+def newFilePath(self, keyvar):
+    """ Callback for instrument 'filename' keyword updates. """
+    try:
+        fname = keyvar.getValue()
+    except ValueError:
+        self.logger.warn('failed to handle new filename keyvar for %s', keyvar)
+        return
+
+    fname = str(fname)
+    self.logger.info('new filename to archive: %s %s', type(fname), fname)
+    self.archivePfsFile(fname)
 
 def _runPfsCmd(self, actor, cmdStr, tag, timeLim=30.0, callFunc=None):
     """ Run one MHS command, and report back to tag.
