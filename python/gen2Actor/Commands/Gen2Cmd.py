@@ -70,6 +70,12 @@ class Gen2Cmd(object):
         gen2._reload()
         gen2.tel_header = gen2.read_header_list("header_telescope_20160917.txt")
         gen2.statusDictTel = gen2.init_stat_dict(gen2.tel_header)
+
+        mcsModel = self.actor.models['mcs'].keyVarDict
+        mcsModel['filename']._removeAllCallbacks()
+        mcsModel['filename'].addCallback(self.actor.gen2.newFilePath, callNow=False)
+        cmd.inform('text="callback: %s"' % (mcsModel['filename']._callbacks))
+
         cmd.finish()
 
     def archive(self, cmd):
