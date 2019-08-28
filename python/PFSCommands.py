@@ -12,7 +12,20 @@ __all__ = ['pfsDribble',
            'mcsexpose',
            'getPfsVisit',
            'archivePfsFile',
+           'newFilePath',
            '_frameToVisit']
+
+def newFilePath(self, keyvar):
+    """ Callback for instrument 'filename' keyword updates. """
+    try:
+        fname = keyvar.getValue()
+    except ValueError:
+        self.logger.warn('failed to handle new filename keyvar for %s', keyvar)
+        return
+
+    fname = str(fname)
+    self.logger.info('new filename to archive: %s %s', type(fname), fname)
+    self.archivePfsFile(fname)
 
 def _runPfsCmd(self, actor, cmdStr, tag, timeLim=30.0, callFunc=None):
     """ Run one MHS command, and report back to tag.
@@ -127,12 +140,8 @@ def mcsexpose(self, tag=None, exptype='bias', exptime=0.0, docentroid='FALSE'):
                           cmd=f'expose {exptype} expTime={exptime} {doCentroidArg}',
                           timeLim = exptime + 15)
 
-    filename = self.keyFromReply(ret, 'filename').values[0]
-    self.logger.warn('########### filename: %s' % filename)
-
-    self.archivePfsFile(filename)
-
-    self.ocs.setvals(subtag, cmd_str="Finished MCS exposure", task_end=time.time())
+    self.ocs.setvals(subtag, cmd_str="Finished MCS exposure",
+                     task_end=time.time())
 
 def _frameToVisit(self, frame):
     return int(frame[4:4+6], base=10), int(frame[10:12], base=10)
