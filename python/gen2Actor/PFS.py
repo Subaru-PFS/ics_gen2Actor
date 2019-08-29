@@ -192,6 +192,7 @@ class PFS(BASECAM):
 
         self.stattbl1 = self.ocs.addStatusTable(tblName1,
                                                 ['status', 'mode', 'count',
+                                                 'mcsBoresight_x', 'mcsBoresight_y',
                                                  'time'])
 
         # read telescope status

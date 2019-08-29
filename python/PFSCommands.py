@@ -2,6 +2,8 @@ import functools
 import os
 import time
 
+import numpy as np
+
 from g2cam.Instrument import CamCommandError
 from opscore.actor.keyvar import AllCodes, DoneCodes
 
@@ -13,6 +15,7 @@ __all__ = ['pfsDribble',
            'getPfsVisit',
            'archivePfsFile',
            'newFilePath',
+           'newMcsBoresight',
            '_frameToVisit']
 
 def newFilePath(self, keyvar):
@@ -24,8 +27,27 @@ def newFilePath(self, keyvar):
         return
 
     fname = str(fname)
-    self.logger.info('new filename to archive: %s %s', type(fname), fname)
+    self.logger.info('new filename to archive: %s', fname)
     self.archivePfsFile(fname)
+
+def newMcsBoresight(self, keyvar):
+    """ Callback for instrument 'filename' keyword updates. """
+    try:
+        boresight = keyvar.valueList
+    except ValueError:
+        self.logger.warn('failed to handle boresight keyvar for %s', keyvar)
+        return
+
+    x,y = boresight
+    if x is None:
+        x = np.nan
+    if y is None:
+        y = np.nan
+
+    self.actor.gen2.stattbl1.setvals(mcsBoresight_x=float(x), mcsBoresight_y=float(y))
+    self.actor.gen2.ocs.exportStatus()
+
+    self.logger.info('updated boresight: %s %f,%f', boresight, x, y)
 
 def _runPfsCmd(self, actor, cmdStr, tag, timeLim=30.0, callFunc=None):
     """ Run one MHS command, and report back to tag.
