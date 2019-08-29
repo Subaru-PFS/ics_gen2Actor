@@ -96,7 +96,7 @@ def pfsDribble(self, reply, tag=None):
     self.ocs.setvals(tag, cmd_str=str(reply.lastReply))
     time.sleep(0.1)
 
-def pfscmd(self, tag=None, actor=None, cmd=None, callFunc=None, timeLim=None, keyVars=None):
+def pfscmd(self, tag=None, actor=None, cmd=None, callFunc=None, timelim=None, keyVars=None):
     """ Send an arbitrary command to an arbitrary actor.
 
     Args
@@ -125,7 +125,7 @@ def pfscmd(self, tag=None, actor=None, cmd=None, callFunc=None, timeLim=None, ke
 
     self.ocs.setvals(subtag, task_start=time.time(),
                      cmd_str=f'calling {actor} {cmd} ...')
-    ret = self._runPfsCmd(actor, cmd, subtag, timeLim=timeLim, callFunc=callFunc)
+    ret = self._runPfsCmd(actor, cmd, subtag, timeLim=timelim, callFunc=callFunc)
 
     if callFunc is None:
         lines = [str(l) for l in ret.replyList]
