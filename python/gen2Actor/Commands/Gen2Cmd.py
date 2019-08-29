@@ -76,6 +76,11 @@ class Gen2Cmd(object):
         mcsModel['filename'].addCallback(self.actor.gen2.newFilePath, callNow=False)
         cmd.inform('text="callback: %s"' % (mcsModel['filename']._callbacks))
 
+        fpsModel = self.actor.models['fps'].keyVarDict
+        fpsModel['mcsBoresight']._removeAllCallbacks()
+        fpsModel['mcsBoresight'].addCallback(self.actor.gen2.newMcsBoresight, callNow=False)
+        cmd.inform('text="callback: %s"' % (fpsModel['mcsBoresight']._callbacks))
+
         cmd.finish()
 
     def archive(self, cmd):

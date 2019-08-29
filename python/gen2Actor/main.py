@@ -5,7 +5,7 @@ import actorcore.Actor
 class OurActor(actorcore.Actor.Actor):
     def __init__(self, name,
                  productName=None, configFile=None,
-                 modelNames=('gen2','mcs','iic'),
+                 modelNames=('gen2','mcs','iic','fps'),
                  debugLevel=30):
 
         """ Setup an Actor instance. See help for actorcore.Actor for details. """
@@ -20,6 +20,9 @@ class OurActor(actorcore.Actor.Actor):
     def connectionMade(self):
         mcsModel = self.models['mcs'].keyVarDict
         mcsModel['filename'].addCallback(self.gen2.newFilePath, callNow=False)
+
+        fpsModel = self.models['fps'].keyVarDict
+        fpsModel['mcsBoresight'].addCallback(self.gen2.newMcsBoresight, callNow=False)
 
     def _getGen2Key(self, cmd, name):
         """ Utility to wrap fetching Gen2 keyword values. 
