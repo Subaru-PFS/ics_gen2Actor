@@ -8,6 +8,8 @@ import opscore.protocols.keys as keys
 import opscore.protocols.types as types
 from opscore.utility.qstr import qstr
 
+from pfs.utils import opdb
+
 class Gen2Cmd(object):
 
     frameInstRE = re.compile('^PF[JLXIASPF][ABCD]')
@@ -22,7 +24,7 @@ class Gen2Cmd(object):
         # passed a single argument, the parsed and typed command.
         #
         self.vocab = [
-            ('getVisit', '', self.getVisit),
+            ('getVisit', '[<caller>]', self.getVisit),
             ('gen2Reload', '', self.gen2Reload),
             ('archive', '<pathname>', self.archive),
             ('getFitsCards', '<frameId> <expTime> <expType>', self.getFitsCards),
@@ -30,6 +32,8 @@ class Gen2Cmd(object):
 
         # Define typed command arguments for the above commands.
         self.keys = keys.KeysDictionary("core_core", (1, 1),
+                                        keys.Key("caller", types.String(),
+                                                 help='who should be listed as requesting a visit.'),
                                         keys.Key("frameType", types.Enum('A', 'A9'),
                                                  help=''),
                                         keys.Key("cam", types.String(),
@@ -50,17 +54,27 @@ class Gen2Cmd(object):
                                         )
 
     def getVisit(self, cmd):
-        """ Query for a new PFS visit from Gen2.
+        """Query for a new PFS visit from Gen2.
 
-        This is slightly tricky. OCS allocates 8-digit IDs for single
-        image types, but we have four image types (PFS[ABCD]) and only
-        want 6-digits of ID.
+        This is a critical command for any successful exposure. It really cannot be allowed to fail.
 
-        So we
+        If we cannot get a new frame id from Gen2 we fail over to a
+        filesystem-based sequence. If that fails we blow up.
+
+        We also survive opdb outages. The actors will have to be
+        robust against missing pfs_visit table entries.
 
         """
 
+        caller = cmd.cmd.keywords['caller'] if 'caller' in cmd.cmd.keywords else cmd.cmdr
+
         visit = self.actor.gen2.getPfsVisit()
+
+        cmd.debug(f'updating opdb.pfs_visit with visit={visit} and description={caller}')
+        try:
+            opdb.opDB.insert('pfs_visit', pfs_visit_id=visit, pfs_visit_description=caller)
+        except Exception as e:
+            cmd.warning('text="failed to insert into pfs_visit: %s"' % (e))
 
         cmd.finish('visit=%d' % (visit))
 
