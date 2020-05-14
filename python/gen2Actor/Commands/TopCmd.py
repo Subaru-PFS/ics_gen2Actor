@@ -61,7 +61,7 @@ class TopCmd(object):
 
         cmd.inform('text="Present!"')
         self.actor.sendVersionKey(cmd)
-        self.actor._genActorKeys(cmd)
+        self.actor.commandSets['Gen2Cmd']._genActorKeys(cmd)
 
         cmd.finish()
 
