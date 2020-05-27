@@ -5,7 +5,7 @@ import actorcore.Actor
 class OurActor(actorcore.Actor.Actor):
     def __init__(self, name,
                  productName=None, configFile=None,
-                 modelNames=('gen2','mcs','iic','fps'),
+                 modelNames=('gen2','mcs','iic','fps','sps'),
                  debugLevel=30):
 
         """ Setup an Actor instance. See help for actorcore.Actor for details. """
@@ -23,6 +23,10 @@ class OurActor(actorcore.Actor.Actor):
 
         fpsModel = self.models['fps'].keyVarDict
         fpsModel['mcsBoresight'].addCallback(self.gen2.newMcsBoresight, callNow=False)
+
+        # Wait until we like SM1
+        spsModel = self.models['sps'].keyVarDict
+        #spsModel['filename'].addCallback(self.gen2.newFilePath, callNow=False)
 
 #
 # To work
