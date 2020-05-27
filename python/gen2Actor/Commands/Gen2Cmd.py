@@ -9,6 +9,8 @@ import opscore.protocols.types as types
 from opscore.utility.qstr import qstr
 
 from pfs.utils import opdb
+import astropy.coordinates
+import astropy.units as u
 
 class Gen2Cmd(object):
 
@@ -113,7 +115,7 @@ class Gen2Cmd(object):
         expTime = cmdKeys['expTime'].values[0]
         expType = cmdKeys['expType'].values[0]
 
-        self.actor._genActorKeys(cmd)
+        self._genActorKeys(cmd)
 
         # Hack to enforce INSTRM-351 temporarily. For shame, CPL
         #
@@ -124,3 +126,68 @@ class Gen2Cmd(object):
                                                 doUpdate=False)
         cmd.inform('header=%s' % (repr(hdr)))
         cmd.finish()
+
+    def _getGen2Key(self, cmd, name):
+        """ Utility to wrap fetching Gen2 keyword values.
+
+        Bugs
+        ----
+
+        This is disgustingly intimate with the current PFS.py internals. Those will change.
+        """
+
+        try:
+            hdr1 = self.actor.gen2.tel_header[name]
+            val = self.actor.gen2.statusDictTel[hdr1[0]]
+            valType = hdr1[2]
+        except:
+            cmd.warn(f'text="FAILED to retrieve {name}"')
+            return None
+
+        try:
+            val = valType(val)
+        except:
+            cmd.warn(f'text="FAILED to convert {name}:{val} as a {valType}"')
+
+        return val
+
+    def _genActorKeys(self, cmd, doGen2Refresh=True):
+        """Generate all gen2 status keys.
+
+        For this actor, this might get called from either the gen2 or the MHS sides.
+
+        Bugs
+        ---
+
+        With the current Gen2 keyword table implementation, we do not
+        correctly set invalid values to the right type. I think the
+        entire mechanism will be changed.
+
+        """
+
+        def gk(name, cmd=cmd):
+            return self._getGen2Key(cmd, name)
+
+        if doGen2Refresh:
+            self.actor.gen2.update_header_stat()
+        sky = astropy.coordinates.SkyCoord(f'{gk("RA")} {gk("DEC")}',
+                                           unit=(u.hourangle, u.deg),
+                                           frame=astropy.coordinates.FK5)
+        raStr = sky.ra.to_string(unit=u.hourangle, sep=':', precision=8, pad=True)
+        decStr = sky.dec.to_string(unit=u.degree, sep=':', precision=8, alwayssign=True)
+        cmd.inform(f'inst_ids="NAOJ","Subaru","PFS"')
+        cmd.inform(f'program={qstr(gk("PROP-ID"))},{qstr(gk("OBS-MOD"))},{qstr(gk("OBS-ALOC"))},{qstr(gk("OBSERVER"))}')
+        cmd.inform(f'object={qstr(gk("OBJECT"))},{qstr(raStr)},{qstr(decStr)},{qstr(raStr)},{qstr(decStr)}')
+        cmd.inform(f'coordinate_system_ids="FK5",180.0,{gk("EQUINOX")}')
+        cmd.inform(f'tel_axes={gk("AZIMUTH"):0.4f},{gk("ALTITUDE"):0.4f},{gk("ZD")},{gk("AIRMASS"):0.3f}')
+        cmd.inform(f'tel_rot={gk("INST-PA")},{gk("INR-STR")}')
+        cmd.inform(f'tel_focus={qstr(gk("TELFOCUS"))},{qstr(gk("FOC-POS"))},{gk("FOC-VAL")}')
+        cmd.inform(f'tel_adc={qstr(gk("ADC-TYPE"))},{gk("ADC-STR")}')
+        cmd.inform(f'dome_env={gk("DOM-HUM"):0.3f},{gk("DOM-PRS"):0.3f},{gk("DOM-TMP"):0.3f},{gk("DOM-WND"):0.3f}')
+        cmd.inform(f'outside_env={gk("OUT-HUM"):0.3f},{gk("OUT-PRS"):0.3f},{gk("OUT-TMP"):0.3f},{gk("OUT-WND"):0.3f}')
+        # cmd.inform(f'pointing={sky.frame.name},{sky.equinox},{sky.ra.deg},{sky.dec.deg}')
+        cmd.inform(f'm2={qstr(gk("M2-TYPE"))},{gk("M2-POS1")},{gk("M2-POS2")},{gk("M2-POS3")}')
+        cmd.inform(f'm2rot={gk("M2-ANG1"):0.4f},{gk("M2-ANG2"):0.4f},{gk("M2-ANG3"):0.4f}')
+        cmd.inform(f'pfuOffset={gk("W_M2OFF1"):0.3f},{gk("W_M2OFF2"):0.3f},{gk("W_M2OFF3"):0.3f}')
+        cmd.inform(f'autoguider={qstr(gk("AUTOGUID"))}')
+        cmd.inform(f'conditions={qstr(gk("WEATHER"))},{gk("SEEING"):0.3f},{gk("TRANSP"):0.3f}')
