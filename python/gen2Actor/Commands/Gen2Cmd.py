@@ -173,8 +173,8 @@ class Gen2Cmd(object):
         sky = astropy.coordinates.SkyCoord(f'{gk("RA")} {gk("DEC")}',
                                            unit=(u.hourangle, u.deg),
                                            frame=astropy.coordinates.FK5)
-        raStr = sky.ra.to_string(unit=u.hourangle, sep=':', precision=8, pad=True)
-        decStr = sky.dec.to_string(unit=u.degree, sep=':', precision=8, alwayssign=True)
+        raStr = sky.ra.to_string(unit=u.hourangle, sep=':', precision=3, pad=True)
+        decStr = sky.dec.to_string(unit=u.degree, sep=':', precision=3, pad=True, alwayssign=True)
         cmd.inform(f'inst_ids="NAOJ","Subaru","PFS"')
         cmd.inform(f'program={qstr(gk("PROP-ID"))},{qstr(gk("OBS-MOD"))},{qstr(gk("OBS-ALOC"))},{qstr(gk("OBSERVER"))}')
         cmd.inform(f'object={qstr(gk("OBJECT"))},{qstr(raStr)},{qstr(decStr)},{qstr(raStr)},{qstr(decStr)}')
