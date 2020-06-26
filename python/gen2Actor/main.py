@@ -17,12 +17,18 @@ class OurActor(actorcore.Actor.Actor):
                                        configFile=configFile,
                                        modelNames=modelNames)
 
+        self.everConnected = False
+
     def connectionMade(self):
+        if self.everConnected:
+            return
+        self.everConnected = True
+
         mcsModel = self.models['mcs'].keyVarDict
         mcsModel['filename'].addCallback(self.gen2.newFilePath, callNow=False)
 
         fpsModel = self.models['fps'].keyVarDict
-        fpsModel['mcsBoresight'].addCallback(self.gen2.newMcsBoresight, callNow=False)
+        # fpsModel['mcsBoresight'].addCallback(self.gen2.newMcsBoresight, callNow=False)
 
         # Wait until we like SM1
         spsModel = self.models['sps'].keyVarDict
