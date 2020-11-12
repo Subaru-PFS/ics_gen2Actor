@@ -55,6 +55,23 @@ class Gen2Cmd(object):
                                                  help='Gen2 frame ID'),
                                         )
 
+    def getDesignId(self, cmd):
+        """Return the current designId for the instrument.
+
+        For INSTRM-1102, hardwire to use the DCB key. Once INSTRM-1095
+        is done, switch to the IIC key.
+
+        """
+        dcbModel = self.actor.models['dcb'].keyVarDict
+        iicModel = self.actor.models['iic'].keyVarDict
+
+        if 'designId' in iicModel:
+            cmd.warn('text="IIC knows about designIds, but we are forcing the DCB version."')
+
+        designId = dcbModel['designId'].getValue()
+        designId = int(designId) # The Long() opscore type yields 0x12345678 values.
+        return designId
+
     def getVisit(self, cmd):
         """Query for a new PFS visit from Gen2.
 
@@ -71,18 +88,24 @@ class Gen2Cmd(object):
         caller = cmd.cmd.keywords['caller'] if 'caller' in cmd.cmd.keywords else cmd.cmdr
 
         visit = self.actor.gen2.getPfsVisit()
-
-        cmd.debug(f'updating opdb.pfs_visit with visit={visit} and description={caller}')
         try:
-            opdb.opDB.insert('pfs_visit', pfs_visit_id=visit, pfs_visit_description=caller)
+            designId = self.getDesignId(cmd)
         except Exception as e:
-            cmd.warning('text="failed to insert into pfs_visit: %s"' % (e))
+            cmd.warn(f'text="failed to get designId: {e}"')
+            designId = -9999
+
+        cmd.debug(f'updating opdb.pfs_visit with visit={visit}, design_id={designId}, and description={caller}')
+        try:
+            opdb.opDB.insert('pfs_visit', pfs_visit_id=visit, pfs_visit_description=caller,
+                             pfs_design_id=designId)
+        except Exception as e:
+            cmd.warn('text="failed to insert into pfs_visit: %s"' % (e))
 
         cmd.finish('visit=%d' % (visit))
 
     def gen2Reload(self, cmd):
         gen2 = self.actor.gen2
-        
+
         gen2._reload()
         gen2.tel_header = gen2.read_header_list("header_telescope_20160917.txt")
         gen2.statusDictTel = gen2.init_stat_dict(gen2.tel_header)
@@ -106,7 +129,7 @@ class Gen2Cmd(object):
 
         gen2.archivePfsFile(pathname)
         cmd.finish(f'text="registered {pathname} for archiving"')
-        
+
     def getFitsCards(self, cmd):
         """ Query for all TSC and observatory FITS cards. """
 

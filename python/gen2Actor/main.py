@@ -5,7 +5,7 @@ import actorcore.Actor
 class OurActor(actorcore.Actor.Actor):
     def __init__(self, name,
                  productName=None, configFile=None,
-                 modelNames=('gen2','mcs','iic','fps','sps'),
+                 modelNames=('gen2','mcs','iic','fps','sps','dcb'),
                  debugLevel=30):
 
         """ Setup an Actor instance. See help for actorcore.Actor for details. """
