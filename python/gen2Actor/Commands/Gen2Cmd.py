@@ -97,7 +97,7 @@ class Gen2Cmd(object):
         cmd.debug(f'updating opdb.pfs_visit with visit={visit}, design_id={designId}, and description={caller}')
         try:
             opdb.opDB.insert('pfs_visit', pfs_visit_id=visit, pfs_visit_description=caller,
-                             pfs_design_id=designId)
+                             pfs_design_id=designId, issued_at='now')
         except Exception as e:
             cmd.warn('text="failed to insert into pfs_visit: %s"' % (e))
 
