@@ -17,10 +17,15 @@ FITS.SBR.RA       RA         string UNKNOWN    [HMS] RA of telescope pointing
 FITS.SBR.DEC      DEC        string UNKNOWN    [DMS] DEC of telescope pointing
 FITS.SBR.RA       RA2000     string UNKNOWN    [HMS] RA of telescope pointing
 FITS.SBR.DEC      DEC2000    string UNKNOWN    [DMS] DEC of telescope pointing
+FITS.SBR.RA_CMD   RA_CMD     string UNKNOWN    [HMS] RA of nominal telescope pointing
+FITS.SBR.DEC_CMD  DEC_CMD    string UNKNOWN    [DMS] DEC of nominal telescope pointing
 FITS.SBR.EQUINOX  EQUINOX    float  2000.0     [year] Standard FK5
 FITS.SBR.TELFOCUS TELFOCUS   string UNKNOWN    Focus where a beam is reachable
 FITS.SBR.AIRMASS  AIRMASS    float  0.0        Typical air mass during exposure
 FITS.SBR.ZD       ZD         float  0.0        [deg] Zenith Distance at typical time
+#
+STATL.RA_OFFSET   W_RAOFF    float  0.0        [arcsec] RA offset from pointing
+STATL.DEC_OFFSET  W_DECOFF   float  0.0        [arcsec] Dec offset from pointing
 #
 FITS.SBR.AZIMUTH  AZIMUTH    float  0.0        [deg] Azimuth of telescope pointing
 FITS.SBR.ALTITUDE ALTITUDE   float  0.0        [deg] Altitude of telescope pointing
