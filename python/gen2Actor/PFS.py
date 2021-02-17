@@ -118,6 +118,7 @@ class PFS(BASECAM):
                 StatAlias = param[0]
                 FitsKey = param[1]
                 FitsType = param[2]
+                self.logger.info(f'loading header {param}')
                 if FitsType == 'string':
                     FitsDefault = param[3]
                     FitsType = str

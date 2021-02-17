@@ -198,9 +198,19 @@ class Gen2Cmd(object):
                                            frame=astropy.coordinates.FK5)
         raStr = sky.ra.to_string(unit=u.hourangle, sep=':', precision=3, pad=True)
         decStr = sky.dec.to_string(unit=u.degree, sep=':', precision=3, pad=True, alwayssign=True)
+
+        pointing = astropy.coordinates.SkyCoord(f'{gk("RA_CMD")} {gk("DEC_CMD")}',
+                                                unit=(u.hourangle, u.deg),
+                                                frame=astropy.coordinates.FK5)
+        pointingRaStr = pointing.ra.to_string(unit=u.hourangle, sep=':', precision=3, pad=True)
+        pointingDecStr = pointing.dec.to_string(unit=u.degree, sep=':', precision=3, pad=True, alwayssign=True)
         cmd.inform(f'inst_ids="NAOJ","Subaru","PFS"')
         cmd.inform(f'program={qstr(gk("PROP-ID"))},{qstr(gk("OBS-MOD"))},{qstr(gk("OBS-ALOC"))},{qstr(gk("OBSERVER"))}')
+
         cmd.inform(f'object={qstr(gk("OBJECT"))},{qstr(raStr)},{qstr(decStr)},{qstr(raStr)},{qstr(decStr)}')
+        cmd.inform(f'pointing={qstr(pointingRaStr)},{qstr(pointingDecStr)}')
+        cmd.inform(f'offsets={gk("W_RAOFF"):0.4f},{gk("W_DECOFF"):0.4f}')
+        #
         cmd.inform(f'coordinate_system_ids="FK5",180.0,{gk("EQUINOX")}')
         cmd.inform(f'tel_axes={gk("AZIMUTH"):0.4f},{gk("ALTITUDE"):0.4f},{gk("ZD")},{gk("AIRMASS"):0.3f}')
         cmd.inform(f'tel_rot={gk("INST-PA")},{gk("INR-STR")}')
