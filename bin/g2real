@@ -1,1 +1,1 @@
-python $ICS_GEN2ACTOR_DIR/g2cam/scripts/g2cam --cam=PFS --obcpnum 27 --gen2host=g2ins1.sum.subaru.nao.ac.jp "$@"
+python $ICS_GEN2ACTOR_DIR/g2cam/scripts/g2cam --cam=PFS --obcpnum 27 --gen2host=g2ins1.sum.subaru.nao.ac.jp --loglevel=10 --log=/data/logs/actors/gen2/$(date -u +"%Y-%m-%d_%H%M%S").log "$@"
