@@ -101,6 +101,8 @@ class Gen2Cmd(object):
         except Exception as e:
             cmd.warn('text="failed to insert into pfs_visit: %s"' % (e))
 
+        self._genActorKeys(cmd)
+
         cmd.finish('visit=%d' % (visit))
 
     def gen2Reload(self, cmd):
