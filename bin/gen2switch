@@ -1,0 +1,57 @@
+usage() {
+    echo "usage: $(basename $0) newHost" >&2
+    echo "       newHost must be 'real' or 'sim'" >&2
+}
+
+# Kill running gen2Actor or scream
+actorPat='gen2Actor/g2cam'
+swat() {
+    pkill -u pfs --full "$actorPat"
+    for i in 10 9 8 7 6 5 4 3 2 1; do
+	PROCLINE=$(pgrep -u pfs --full -a "$actorPat")
+	if test $? -eq 1; then
+	    if test $i -lt 10; then
+		echo
+	    fi
+	    return
+	fi
+	
+	echo -n "$i "
+	sleep 1
+    done
+
+    echo "running gen2 did not die!!! No idea what to do, sorry. Process is:" >&2
+    echo "   $PROCLINE" >&2
+    exit 3
+}
+
+newHost=$1
+if test -z "$newHost"; then
+    usage
+    exit 1
+fi
+
+okHost=mhs-ics
+if test $(hostname) != "$okHost"; then
+    echo "gen2Actor can only be run on $okHost"
+    exit 4
+fi
+
+cd /data/logs/actors/gen2
+logname=$(date +%Y-%m-%dT%H:%M:%S.log)
+
+if test $newHost = real; then
+    swat
+    nohup g2real >$logname 2>&1 &
+elif test $newHost = sim; then
+    swat
+    nohup g2sim >$logname 2>&1 &
+else
+    usage
+    exit 2
+fi
+
+echo "with luck the $newHost gen2 server is running, per:"
+pgrep --u pfs --full -a "$actorPat"
+
+
