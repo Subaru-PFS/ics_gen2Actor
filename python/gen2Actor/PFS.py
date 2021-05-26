@@ -93,14 +93,19 @@ class PFS(BASECAM):
 
         def convertFloat(raw):
             # Subaru convention
-            if raw == "##NODATA##":
-                return raw
-            return float(raw)
-
+            if raw in {"##NODATA##", "##ERROR##"}:
+                return 9998.0
+            try:
+                f = float(raw)
+            except ValueError:
+                self.logger.warn("invalid float: %s", raw)
+                f = 9998.0
+            return f
+        
         def convertInt(raw):
             # Subaru convention
-            if raw == "##NODATA##":
-                return raw
+            if raw in {"##NODATA##", "##ERROR##"}:
+                return 9998
             if isinstance(raw, str):
                 return int(raw, base=10)
             else:
