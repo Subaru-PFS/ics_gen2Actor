@@ -49,7 +49,7 @@ def newMcsBoresight(self, keyvar):
 
     self.logger.info('updated boresight: %s %f,%f', boresight, x, y)
 
-def _runPfsCmd(self, actor, cmdStr, tag, timeLim=30.0, callFunc=None):
+def _runPfsCmd(self, actor, cmdStr, tag, timelim=30.0, callFunc=None):
     """ Run one MHS command, and report back to tag.
 
     Args
@@ -65,11 +65,11 @@ def _runPfsCmd(self, actor, cmdStr, tag, timeLim=30.0, callFunc=None):
       Called as callFunc(replyLine, tag=tag)
     """
 
-    self.logger.info(f'dispatching MHS command with timeLim {timeLim}: {actor} {cmdStr}')
+    self.logger.info(f'dispatching MHS command with timelim {timelim}: {actor} {cmdStr}')
     if callFunc is None:
         ret = self.actor.cmdr.call(actor=actor,
                                    cmdStr=cmdStr,
-                                   timeLim=timeLim)
+                                   timeLim=timelim)
         if ret.didFail:
             raise CamCommandError(f'actor {actor} command {cmdStr} failed')
         return ret
@@ -77,7 +77,7 @@ def _runPfsCmd(self, actor, cmdStr, tag, timeLim=30.0, callFunc=None):
         callFunc = functools.partial(callFunc, tag=tag)
         self.actor.cmdr.bgCall(actor=actor,
                                cmdStr=cmdStr,
-                               timeLim=timeLim,
+                               timeLim=timelim,
                                callCodes=AllCodes,
                                callFunc=callFunc)
         return None
@@ -125,7 +125,7 @@ def pfscmd(self, tag=None, actor=None, cmd=None, callFunc=None, timelim=None, ke
 
     self.ocs.setvals(subtag, task_start=time.time(),
                      cmd_str=f'calling {actor} {cmd} ...')
-    ret = self._runPfsCmd(actor, cmd, subtag, timeLim=timelim, callFunc=callFunc)
+    ret = self._runPfsCmd(actor, cmd, subtag, timelim=timelim, callFunc=callFunc)
 
     if callFunc is None:
         lines = [str(l) for l in ret.replyList]
@@ -160,7 +160,7 @@ def mcsexpose(self, tag=None, exptype='bias', exptime=0.0, docentroid='FALSE'):
     else:
         ret = self.pfscmd(tag=tag, actor='mcs',
                           cmd=f'expose {exptype} expTime={exptime} {doCentroidArg}',
-                          timeLim = exptime + 15)
+                          timelim=exptime + 15)
 
     self.ocs.setvals(subtag, cmd_str="Finished MCS exposure",
                      task_end=time.time())
