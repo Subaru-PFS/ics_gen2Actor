@@ -202,7 +202,8 @@ class PFS(BASECAM):
                                                  'time'])
 
         # read telescope status
-        self.tel_header = self.read_header_list("header_telescope_20160917.txt")
+        rootDir = os.environ['ICS_GEN2ACTOR_DIR']
+        self.tel_header = self.read_header_list(os.path.join(rootDir, "header_telescope_20160917.txt"))
         self.statusDictTel = self.init_stat_dict(self.tel_header)
 
         # Add other tables here if you have more than one table...
