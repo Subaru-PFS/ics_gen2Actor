@@ -1,3 +1,4 @@
+setupRequired(spt_operational_database)
 setupRequired(tron_actorcore)
 setupRequired(ics_actorkeys)
 setupRequired(pfs_utils)
