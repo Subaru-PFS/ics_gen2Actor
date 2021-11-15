@@ -3,13 +3,13 @@
 from importlib import reload
 
 import datetime
+import logging
 import re
-
-import numpy as np
 
 import opscore.protocols.keys as keys
 import opscore.protocols.types as types
 from opscore.utility.qstr import qstr
+from pfs.utils import butler
 
 from opdb import opdb as sptOpdb
 
@@ -63,9 +63,13 @@ class Gen2Cmd(object):
                                                  help='Gen2 frame ID'),
                                         )
 
+        self.logger = logging.getLogger('Gen2Cmd')
         self.opdb = sptOpdb.OpDB(hostname='db-ics', dbname='opdb', username='pfs')
         self.visit = 0
         self.statusSequence = 0
+
+        self.actor.butler = butler.Butler()
+        self.updateArchiving()
 
     def getDesignId(self, cmd):
         """Return the current designId for the instrument.
