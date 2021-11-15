@@ -38,6 +38,7 @@ class Gen2Cmd(object):
             ('updateTelStatus', '[<caller>]', self.updateTelStatus),
             ('gen2Reload', '', self.gen2Reload),
             ('archive', '<pathname>', self.archive),
+            ('updateArchiving', '', self.updateArchiving),
         ]
 
         # Define typed command arguments for the above commands.
@@ -145,24 +146,162 @@ class Gen2Cmd(object):
         gen2.tel_header = gen2.read_header_list("header_telescope_20160917.txt")
         gen2.statusDictTel = gen2.init_stat_dict(gen2.tel_header)
 
-        mcsModel = self.actor.models['mcs'].keyVarDict
-        mcsModel['filename']._removeAllCallbacks()
-        mcsModel['filename'].addCallback(self.actor.gen2.newFilePath, callNow=False)
-        cmd.inform('text="callback: %s"' % (mcsModel['filename']._callbacks))
+        self.updateArchiving(cmd)
 
-        fpsModel = self.actor.models['fps'].keyVarDict
-        fpsModel['mcsBoresight']._removeAllCallbacks()
-        fpsModel['mcsBoresight'].addCallback(self.actor.gen2.newMcsBoresight, callNow=False)
-        cmd.inform('text="callback: %s"' % (fpsModel['mcsBoresight']._callbacks))
+    def newPfscFilename(self, keyvar):
+        """ Callback for instrument 'filename' keyword updates. """
+        try:
+            fname = keyvar.getValue()
+        except ValueError:
+            self.logger.warn('failed to handle new filename keyvar for %s', keyvar)
+            return
 
-        cmd.finish()
+        fname = str(fname)
+        self.logger.info('new filename to archive: %s', fname)
+
+        self.actor.gen2.archivePfsFile(fname)
+        self.logger.info(f'PFSC {fname}')
+
+    def newPfsaFileIds(self, keyvar):
+        """Archive a PFSA file described by a ccd_mn.spsFileIds keyvar. """
+
+        vals = keyvar.valueList
+        names = 'cam', 'pfsDay', 'visit', 'spectrograph', 'armNum'
+        idDict = dict(zip(names, vals))
+        path = self.actor.butler.getPath('spsFile', idDict)
+
+        self.actor.gen2.archivePfsFile(str(path))
+        self.logger.info(f'PFSA {idDict} {path}')
+
+    def newPfsbFileIds(self, keyvar):
+        """Archive a PFSB file described by a hx_mn.spsFileIds keyvar. """
+
+        vals = keyvar.valueList
+        names = 'cam', 'pfsDay', 'visit', 'spectrograph', 'armNum'
+        idDict = dict(zip(names, vals))
+        path = self.actor.butler.getPath('rampFile', idDict)
+
+        self.actor.gen2.archivePfsFile(str(path))
+        self.logger.info(f'PFSB {idDict} {path}')
+
+    def newPfscFileIds(self, keyvar):
+        """Archive a PFSC file described by a mcs.mcsFileIds keyvar. """
+
+        vals = keyvar.valueList
+        names = 'pfsDay', 'visit', 'mcsFrameNum'
+        idDict = dict(zip(names, vals))
+        path = self.actor.butler.getPath('mcsFile', idDict)
+
+        self.actor.gen2.archivePfsFile(str(path))
+        self.logger.info(f'PFSC {idDict} {path}')
+
+    def newPfsdFileIds(self, keyvar):
+        """Archive a PFSD file described by an agcc.agccFileIds keyvar. """
+
+        vals = keyvar.valueList
+        names = 'pfsDay', 'visit', 'agccFrameNum'
+        idDict = dict(zip(names, vals))
+        path = self.actor.butler.getPath('agccFile', idDict)
+
+        self.actor.gen2.archivePfsFile(str(path))
+        self.logger.info(f'PFSD {idDict} {path}')
+
+    def newPfsConfigFileIds(self, keyvar):
+        """Archive a pfsConfig file described by an fps.pfsConfig keyvar. """
+
+        vals = keyvar.valueList
+        names = 'pfsDay', 'designId', 'visit0'
+        idDict = dict(zip(names, vals))
+        path = self.actor.butler.getPath('pfsConfig', idDict)
+
+        self.actor.gen2.archivePfsFile(str(path))
+        self.logger.info(f'pfsConfig {idDict} {path}')
+
+    def _updateCallback(self, actor, keyname, callback=None):
+        """Update a keyvar callback, deleting existing one if necessary.
+
+        Args
+        ----
+        actor : `str`
+           Name of actor
+        keyname : `str`
+           Name of actor's keyword.
+        callback : callable
+           function to call when a new value is received.
+        """
+
+        try:
+            model = self.actor.models[actor].keyVarDict
+        except Exception as e:
+            self.logger.warn(f'failed to load model {actor}: {e}')
+            return
+
+        try:
+            model[keyname]._removeAllCallbacks()
+            if callback is not None:
+                model[keyname].addCallback(callback, callNow=False)
+            self.logger.info(f'added callback {callback} for {actor}.{keyname}')
+        except Exception as e:
+            self.logger.warn(f'failed to add callback for {keyname}: {e}')
+            return
+
+    def updateArchiving(self, cmd=None):
+        """Reconfigure and regenerate all archiving keyvar callbacks.
+
+        This can be called as a command, in which case all known
+        archiver keyvar callbacks are either cleared are registered.
+
+        This is also called everytime this module is reloaded, so that
+        the callbacks point to methods in the new object.
+
+        Uses the gen2.archive configuration variable to specify which
+        files we want archived. A list of 'PFSC', 'PFSD', 'ccd_nm',
+        'hx_nm', 'pfsConfig'
+        """
+
+        if cmd is None:
+            cmd = self.actor.bcast
+
+        doArchive = self.actor.config.get('gen2', 'archive')
+
+        self._updateCallback('fps', 'pfsConfigPathIds',
+                             self.newPfsConfigFilename if 'pfsConfig' in doArchive else None)
+        mcsKeys = self.actor.models['mcs'].keyVarDict
+        if 'mcsFileIds' in mcsKeys:
+            self._updateCallback('mcs', 'mcsFileIds',
+                                 self.newPfscFileIds if 'PFSC' in doArchive else None)
+        else:
+            # Remove this once we start getting mcsFileIds.
+            self._updateCallback('mcs', 'filename',
+                                 self.newPfscFilename if 'PFSC' in doArchive else None)
+        self._updateCallback('agcc', 'pfsdPathIds',
+                             self.newPfsdFileIds if 'PFSD' in doArchive else None)
+
+        for sm in 1,2,3,4:
+            for arm in 'b','r':
+                camName = f'ccd_{arm}{sm}'
+                self._updateCallback(camName, 'spsFileIds',
+                                     self.newPfsaFileIds if camName in doArchive else None)
+
+            camName = f'hx_n{sm}'
+            self._updateCallback(camName, 'spsFileIds',
+                                 self.newPfsbFileIds if camName in doArchive else None)
+
+        if cmd is not None:
+            cmd.finish(f'text="archiving {doArchive}')
+
+    def _updateCallbacks(self):
+        self.updateArchiving()
+
+        # fpsModel = self.models['fps'].keyVarDict
+        # fpsModel['mcsBoresight'].addCallback(self.gen2.newMcsBoresight, callNow=False)
 
     def archive(self, cmd):
         """ Archive a FITS file for STARS. """
         pathname = cmd.cmd.keywords['pathname'].values[0]
         gen2 = self.actor.gen2
 
-        gen2.archivePfsFile(pathname)
+        gen2.archivePfsFile(str(pathname))
         cmd.finish(f'text="registered {pathname} for archiving"')
 
     def updateOpdb(self, cmd, now, statusDict, sky, pointing):
