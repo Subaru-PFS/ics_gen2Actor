@@ -34,7 +34,7 @@ class Gen2Cmd(object):
         # passed a single argument, the parsed and typed command.
         #
         self.vocab = [
-            ('getVisit', '[<caller>]', self.getVisit),
+            ('getVisit', '[<caller>] [<designId>]', self.getVisit),
             ('updateTelStatus', '[<caller>]', self.updateTelStatus),
             ('gen2Reload', '', self.gen2Reload),
             ('archive', '<pathname>', self.archive),
@@ -62,6 +62,10 @@ class Gen2Cmd(object):
                                                  help='exposure time'),
                                         keys.Key("frameId", types.String(),
                                                  help='Gen2 frame ID'),
+                                        keys.Key("frameId", types.String(),
+                                                 help='Gen2 frame ID'),
+                                        keys.Key("designId", types.Long(), help="PFS design ID"),
+
                                         )
 
         self.logger = logging.getLogger('Gen2Cmd')
@@ -79,14 +83,27 @@ class Gen2Cmd(object):
         is done, switch to the IIC key.
 
         """
-        dcbModel = self.actor.models['dcb'].keyVarDict
-        iicModel = self.actor.models['iic'].keyVarDict
+        cmdKeys = cmd.cmd.keywords
+        designId = str(cmdKeys['designId'].values[0]) if 'designId' in cmdKeys else None
 
-        if 'designId' in iicModel:
-            cmd.warn('text="IIC knows about designIds, but we are forcing the DCB version."')
+        if designId is None:
+            dcbModel = self.actor.models['dcb'].keyVarDict
+            iicModel = self.actor.models['iic'].keyVarDict
+            if 'designId' in iicModel:
+                cmd.warn('text="No designId specified, using the IIC version."')
+                designId = iicModel['designId'].getValue()
+            elif 'designId' in dcbModel:
+                cmd.warn('text="No designId specified, using the DCB version."')
+                designId = dcbModel['designId'].getValue()
+            else:
+                cmd.warn('text="No designId specified, using 0."')
+                designId = 0
 
-        designId = dcbModel['designId'].getValue()
-        designId = int(designId) # The Long() opscore type yields 0x12345678 values.
+        try:
+            designId = int(designId) # The Long() opscore type yields 0x12345678 values.
+        except TypeError:
+            designId = 0
+
         return designId
 
     def getVisit(self, cmd):
@@ -101,15 +118,14 @@ class Gen2Cmd(object):
         robust against missing pfs_visit table entries.
 
         """
-
-        caller = str(cmd.cmd.keywords['caller'].values[0]) if 'caller' in cmd.cmd.keywords else None
+        cmdKeys = cmd.cmd.keywords
+        caller = str(cmdKeys['caller'].values[0]) if 'caller' in cmdKeys else None
         description = caller if caller is not None else cmd.cmdr
 
         self.visit = visit = self.actor.gen2.getPfsVisit()
         self.statusSequence = 0
         try:
             designId = self.getDesignId(cmd)
-            designId = int(designId)
         except Exception as e:
             cmd.warn(f'text="failed to get designId: {e}"')
             designId = -9999
@@ -314,14 +330,14 @@ class Gen2Cmd(object):
             return self._getGen2Key(cmd, name, statusDict=statusDict)
 
         try:
-            stmt = self.opdb.insert_kw('tel_status',
-                                       pfs_visit_id=self.visit, status_sequence_id=statusSequence,
-                                       altitude=gk('ALTITUDE'), azimuth=gk('AZIMUTH'),
-                                       insrot=gk('INR-STR'), adc_pa=gk('ADC-STR'),
-                                       m2_pos3=gk('M2-POS3'),
-                                       tel_ra=pointing.ra.degree, tel_dec=pointing.dec.degree,
-                                       dome_shutter_status=-9998, dome_light_status=-9998,
-                                       created_at=now.isoformat())
+            self.opdb.insert_kw('tel_status',
+                                pfs_visit_id=self.visit, status_sequence_id=statusSequence,
+                                altitude=gk('ALTITUDE'), azimuth=gk('AZIMUTH'),
+                                insrot=gk('INR-STR'), adc_pa=gk('ADC-STR'),
+                                m2_pos3=gk('M2-POS3'),
+                                tel_ra=pointing.ra.degree, tel_dec=pointing.dec.degree,
+                                dome_shutter_status=-9998, dome_light_status=-9998,
+                                created_at=now.isoformat())
         except Exception as e:
             cmd.warn('text="failed to insert into tel_status: %s"' % (e))
 
@@ -401,12 +417,13 @@ class Gen2Cmd(object):
                                                 unit=(u.hourangle, u.deg),
                                                 frame=astropy.coordinates.FK5)
         pointingRaStr = pointing.ra.to_string(unit=u.hourangle, sep=':', precision=3, pad=True)
-        pointingDecStr = pointing.dec.to_string(unit=u.degree, sep=':', precision=3, pad=True, alwayssign=True)
+        pointingDecStr = pointing.dec.to_string(unit=u.degree, sep=':',
+                                                precision=3, pad=True, alwayssign=True)
 
         if caller is not None:
             statusSequence = self.updateOpdb(cmd, now, statusDict, sky, pointing)
 
-        cmd.inform(f'inst_ids="NAOJ","Subaru","PFS"')
+        cmd.inform('inst_ids="NAOJ","Subaru","PFS"')
         cmd.inform(f'program={qstr(gk("PROP-ID"))},{qstr(gk("OBS-MOD"))},{qstr(gk("OBS-ALOC"))},{qstr(gk("OBSERVER"))}')
 
         cmd.inform(f'object={qstr(gk("OBJECT"))},{qstr(raStr)},{qstr(decStr)},{qstr(raStr)},{qstr(decStr)}')
