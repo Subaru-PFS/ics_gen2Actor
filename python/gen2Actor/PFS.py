@@ -201,10 +201,7 @@ class PFS(BASECAM):
                                                  'mcsBoresight_x', 'mcsBoresight_y',
                                                  'time'])
 
-        # read telescope status
-        rootDir = os.environ['ICS_GEN2ACTOR_DIR']
-        self.tel_header = self.read_header_list(os.path.join(rootDir, "header_telescope_20160917.txt"))
-        self.statusDictTel = self.init_stat_dict(self.tel_header)
+        self.registerStatusDict()
 
         # Add other tables here if you have more than one table...
 
@@ -218,6 +215,12 @@ class PFS(BASECAM):
         # Lock for handling mutual exclusion
         self.lock = threading.RLock()
 
+    def registerStatusDict(self):
+        """Let Gen2 know which status keys we are interested in. """
+
+        rootDir = os.environ['ICS_GEN2ACTOR_DIR']
+        self.tel_header = self.read_header_list(os.path.join(rootDir, "header_telescope.txt"))
+        self.statusDictTel = self.init_stat_dict(self.tel_header)
 
     def start(self, wait=True):
         super(PFS, self).start(wait=wait)

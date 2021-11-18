@@ -159,8 +159,7 @@ class Gen2Cmd(object):
         gen2 = self.actor.gen2
 
         gen2._reload()
-        gen2.tel_header = gen2.read_header_list("header_telescope_20160917.txt")
-        gen2.statusDictTel = gen2.init_stat_dict(gen2.tel_header)
+        gen2.registerStatusDict()
 
         self.updateArchiving(cmd)
 
