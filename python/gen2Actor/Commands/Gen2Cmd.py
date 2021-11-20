@@ -443,5 +443,8 @@ class Gen2Cmd(object):
         cmd.inform(f'autoguider={qstr(gk("AUTOGUID"))}')
         cmd.inform(f'conditions={qstr(gk("WEATHER"))},{gk("SEEING"):0.3f},{gk("TRANSP"):0.3f}')
 
+        cmd.inform(f'moon={gk("MOON-EL"):0.3f},{gk("MOON-SEP"):0.3f},{gk("MOON-ILL"):0.3f}')
+        cmd.inform(f'obsMethod={qstr(gk("OBS-MTHD"))}')
+
         if caller is not None:
             cmd.inform(f'statusUpdate={self.visit},{statusSequence},{caller}')
