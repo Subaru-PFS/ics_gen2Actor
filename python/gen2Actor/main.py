@@ -29,7 +29,7 @@ class OurActor(actorcore.Actor.Actor):
             for arm in 'b','r','n':
                 models.append(f'ccd_{arm}{sm}')
         self.addModels(models)
-
+        self.commandSets['Gen2Cmd'].updateArchiving()
 #
 # To work
 def main():
