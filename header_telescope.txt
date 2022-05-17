@@ -63,3 +63,9 @@ FITS.SBR.OUT-HUM  OUT-HUM    float  0.0        [%] Outside humidity
 FITS.SBR.OUT-PRS  OUT-PRS    float  0.0        [hPa] Outside pressure
 FITS.SBR.OUT-TMP  OUT-TMP    float  0.0        [K] Outside temperature
 FITS.SBR.OUT-WND  OUT-WND    float  0.0        [m/s] Outside wind speed
+#
+# "Queue mode" cards added 2021-11-18 for INSTRM-1444
+FITS.SBR.OBS-MTHD OBS-MTHD   string UNKNOWN    Observing method
+FITS.SBR.MOON-EL  MOON-EL    float  0.0        [degree] Moon Elevation at exposure start
+FITS.SBR.MOON-ILL MOON-ILL   float  0.0        Moon illumination at exposure start
+FITS.SBR.MOON-SEP MOON-SEP   float  0.0        [degree] Moon Separation at exposure start

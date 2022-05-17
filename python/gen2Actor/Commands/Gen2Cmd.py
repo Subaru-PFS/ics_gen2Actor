@@ -62,8 +62,6 @@ class Gen2Cmd(object):
                                                  help='exposure time'),
                                         keys.Key("frameId", types.String(),
                                                  help='Gen2 frame ID'),
-                                        keys.Key("frameId", types.String(),
-                                                 help='Gen2 frame ID'),
                                         keys.Key("designId", types.Long(), help="PFS design ID"),
 
                                         )
@@ -159,8 +157,7 @@ class Gen2Cmd(object):
         gen2 = self.actor.gen2
 
         gen2._reload()
-        gen2.tel_header = gen2.read_header_list("header_telescope_20160917.txt")
-        gen2.statusDictTel = gen2.init_stat_dict(gen2.tel_header)
+        gen2.registerStatusDict()
 
         self.updateArchiving(cmd)
 
@@ -184,10 +181,14 @@ class Gen2Cmd(object):
         vals = keyvar.valueList
         names = 'cam', 'pfsDay', 'visit', 'spectrograph', 'armNum'
         idDict = dict(zip(names, vals))
-        path = self.actor.butler.getPath('spsFile', idDict)
+        self.logger.info(f'getPath(spsFile) with {idDict} ')
 
-        self.actor.gen2.archivePfsFile(str(path))
-        self.logger.info(f'PFSA {idDict} {path}')
+        try:
+            path = self.actor.butler.getPath('spsFile', idDict)
+            self.actor.gen2.archivePfsFile(str(path))
+            self.logger.info(f'PFSA {idDict} {path}')
+        except Exception as e:
+            self.logger.warning(f'getPath(spsFile) with {idDict} failed: {e}')
 
     def newPfsbFileIds(self, keyvar):
         """Archive a PFSB file described by a hx_mn.spsFileIds keyvar. """
@@ -206,10 +207,14 @@ class Gen2Cmd(object):
         vals = keyvar.valueList
         names = 'pfsDay', 'visit', 'mcsFrameNum'
         idDict = dict(zip(names, vals))
-        path = self.actor.butler.getPath('mcsFile', idDict)
+        self.logger.info(f'getPath(mcsFile) with {idDict} ')
 
-        self.actor.gen2.archivePfsFile(str(path))
-        self.logger.info(f'PFSC {idDict} {path}')
+        try:
+            path = self.actor.butler.getPath('mcsFile', idDict)
+            self.actor.gen2.archivePfsFile(str(path))
+            self.logger.info(f'PFSC {idDict} {path}')
+        except Exception as e:
+            self.logger.warning(f'getPath(mcsFile) with {idDict} failed: {e}')
 
     def newPfsdFileIds(self, keyvar):
         """Archive a PFSD file described by an agcc.agccFileIds keyvar. """
@@ -217,10 +222,14 @@ class Gen2Cmd(object):
         vals = keyvar.valueList
         names = 'pfsDay', 'visit', 'agccFrameNum'
         idDict = dict(zip(names, vals))
-        path = self.actor.butler.getPath('agccFile', idDict)
+        self.logger.info(f'getPath(agccFile) with {idDict} ')
 
-        self.actor.gen2.archivePfsFile(str(path))
-        self.logger.info(f'PFSD {idDict} {path}')
+        try:
+            path = self.actor.butler.getPath('agccFile', idDict)
+            self.actor.gen2.archivePfsFile(str(path))
+            self.logger.info(f'PFSD {idDict} {path}')
+        except Exception as e:
+            self.logger.warning(f'getPath(agccFile) with {idDict} failed: {e}')
 
     def newPfsConfigFileIds(self, keyvar):
         """Archive a pfsConfig file described by an fps.pfsConfig keyvar. """
@@ -228,10 +237,13 @@ class Gen2Cmd(object):
         vals = keyvar.valueList
         names = 'pfsDay', 'designId', 'visit0'
         idDict = dict(zip(names, vals))
-        path = self.actor.butler.getPath('pfsConfig', idDict)
 
-        self.actor.gen2.archivePfsFile(str(path))
-        self.logger.info(f'pfsConfig {idDict} {path}')
+        try:
+            path = self.actor.butler.getPath('pfsConfig', idDict)
+            self.actor.gen2.archivePfsFile(str(path))
+            self.logger.info(f'pfsConfig {idDict} {path}')
+        except Exception as e:
+            self.logger.warning(f'getPath(pfsConfig) with {idDict} failed: {e}')
 
     def _updateCallback(self, actor, keyname, callback=None):
         """Update a keyvar callback, deleting existing one if necessary.
@@ -280,10 +292,13 @@ class Gen2Cmd(object):
 
         doArchive = self.actor.config.get('gen2', 'archive')
 
+        if 'fps' not in self.actor.models:
+            cmd.warn("text='not updating callbacks until models loaded.....'")
+            return
+
         self._updateCallback('fps', 'pfsConfigPathIds',
                              self.newPfsConfigFilename if 'pfsConfig' in doArchive else None)
-        mcsKeys = self.actor.models['mcs'].keyVarDict
-        if 'mcsFileIds' in mcsKeys:
+        if False:
             self._updateCallback('mcs', 'mcsFileIds',
                                  self.newPfscFileIds if 'PFSC' in doArchive else None)
         else:
@@ -443,6 +458,9 @@ class Gen2Cmd(object):
         cmd.inform(f'pfuOffset={gk("W_M2OFF1"):0.3f},{gk("W_M2OFF2"):0.3f},{gk("W_M2OFF3"):0.3f}')
         cmd.inform(f'autoguider={qstr(gk("AUTOGUID"))}')
         cmd.inform(f'conditions={qstr(gk("WEATHER"))},{gk("SEEING"):0.3f},{gk("TRANSP"):0.3f}')
+
+        cmd.inform(f'moon={gk("MOON-EL"):0.3f},{gk("MOON-SEP"):0.3f},{gk("MOON-ILL"):0.3f}')
+        cmd.inform(f'obsMethod={qstr(gk("OBS-MTHD"))}')
 
         if caller is not None:
             cmd.inform(f'statusUpdate={self.visit},{statusSequence},{caller}')
