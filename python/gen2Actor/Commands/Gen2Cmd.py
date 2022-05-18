@@ -40,8 +40,7 @@ class Gen2Cmd(object):
             ('archive', '<pathname>', self.archive),
             ('updateArchiving', '', self.updateArchiving),
             ('setupCallbacks', '', self.setupCallbacks),
-            ('testCallbacks', '', self.testCallbacks),
-        ]
+            ]
 
         # Define typed command arguments for the above commands.
         self.keys = keys.KeysDictionary("core_core", (1, 1),
