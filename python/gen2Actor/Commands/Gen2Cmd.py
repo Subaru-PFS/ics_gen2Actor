@@ -39,6 +39,8 @@ class Gen2Cmd(object):
             ('gen2Reload', '', self.gen2Reload),
             ('archive', '<pathname>', self.archive),
             ('updateArchiving', '', self.updateArchiving),
+            ('setupCallbacks', '', self.setupCallbacks),
+            ('testCallbacks', '', self.testCallbacks),
         ]
 
         # Define typed command arguments for the above commands.
@@ -72,6 +74,7 @@ class Gen2Cmd(object):
         self.statusSequence = 0
 
         self.actor.butler = butler.Butler()
+        self.setupCallbacks()
         self.updateArchiving()
 
     def getDesignId(self, cmd):
@@ -245,6 +248,46 @@ class Gen2Cmd(object):
         except Exception as e:
             self.logger.warning(f'getPath(pfsConfig) with {idDict} failed: {e}')
 
+    def newPfsDesign(self, keyvar):
+        """MHS keyvar callback to pass PfsDesign info over to Gen2 """
+
+        vals = keyvar.valueList
+        tvals = [v.__class__.baseType(v) for v in vals]
+        
+        names = 'designId', 'visit', 'ra', 'dec', 'pa', 'name'
+        keyDict = dict(zip(names, tvals))
+
+        tableName = 'PFS.DESIGN'
+        self.logger.info('newPfsDesign: %s', keyDict)
+        self.actor.gen2.updateStatusDict(tableName, keyDict)
+        self.actor.gen2.ocs.exportStatusTable(tableName)
+
+    def newGuideErrors(self, keyvar):
+        """MHS keyvar callback to pass guideOffsets info over to Gen2
+
+        Key('guideErrors',
+            Int(name='exposureId', help='Exposure identifier'),
+            Float(name='dRA', units='arcsec', help='Right ascension error'),
+            Float(name='dDec', units='arcsec', help='Declination error'),
+            Float(name='dInR', units='arcsec', help='Instrument rotator angle error'),
+            Float(name='dAz', units='arcsec', help='Azimuth error'),
+            Float(name='dAlt', units='arcsec', help='Altitude error'),
+            Float(name='dZ', units='mm', help='Focus error'),
+        ),
+        """
+        
+
+        vals = keyvar.valueList
+        tvals = [v.__class__.baseType(v) for v in vals]
+        
+        names = 'dRA', 'dDec', 'dInR', 'dAz', 'dAlt', 'dFocus', 'exposureId'
+        keyDict = dict(zip(names, tvals))
+
+        tableName = 'PFS.AG.ERR'
+        self.logger.info('newGuideErrors: %s', keyDict)
+        self.actor.gen2.updateStatusDict(tableName, keyDict)
+        self.actor.gen2.ocs.exportStatusTable(tableName)
+
     def _updateCallback(self, actor, keyname, callback=None):
         """Update a keyvar callback, deleting existing one if necessary.
 
@@ -272,6 +315,20 @@ class Gen2Cmd(object):
         except Exception as e:
             self.logger.warn(f'failed to add callback for {keyname}: {e}')
             return
+
+    def setupCallbacks(self, cmd=None):
+        if cmd is None:
+            cmd = self.actor.bcast
+
+        if 'iic' not in self.actor.models:
+            cmd.warn("text='not updating callbacks until iic model loaded.....'")
+            return
+        
+        self._updateCallback('iic', 'pfsDesign', self.newPfsDesign)
+        self._updateCallback('ag', 'guideErrors', self.newGuideErrors)
+        
+        cmd.inform(f'text="Gen2 key tables: {self.actor.gen2.keyTables.keys()}"')
+        cmd.finish()
 
     def updateArchiving(self, cmd=None):
         """Reconfigure and regenerate all archiving keyvar callbacks.
