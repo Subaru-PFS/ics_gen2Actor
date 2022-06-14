@@ -1,6 +1,6 @@
 usage() {
     echo "usage: $(basename $0) newHost" >&2
-    echo "       newHost must be 'real' or 'sim'" >&2
+    echo "       newHost must be 'real', 'sim', or 'hilo'" >&2
 }
 
 # Kill running gen2Actor or scream
@@ -46,12 +46,16 @@ if test $newHost = real; then
 elif test $newHost = sim; then
     swat
     nohup g2sim >$logname 2>&1 &
+elif test $newHost = hilo; then
+    swat
+    nohup g2hilo >$logname 2>&1 &
 else
     usage
     exit 2
 fi
 
 echo "with luck the $newHost gen2 server is running, per:"
+sleep 2
 pgrep --u pfs --full -a "$actorPat"
 
 
