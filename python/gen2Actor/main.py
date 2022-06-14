@@ -26,8 +26,9 @@ class OurActor(actorcore.Actor.Actor):
 
         models = []
         for sm in 1,2,3,4:
-            for arm in 'b','r','n':
+            for arm in 'b','r':
                 models.append(f'ccd_{arm}{sm}')
+            models.append(f'hx_n{sm}')
         self.addModels(models)
         self.commandSets['Gen2Cmd'].setupCallbacks()
         self.commandSets['Gen2Cmd'].updateArchiving()
