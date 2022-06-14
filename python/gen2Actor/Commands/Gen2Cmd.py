@@ -258,7 +258,7 @@ class Gen2Cmd(object):
 
         tableName = 'PFS.DESIGN'
         self.logger.info('newPfsDesign: %s', keyDict)
-        self.actor.gen2.updateStatusDict(tableName, keyDict)
+        self.actor.gen2.ocs.setStatus(tableName, **keyDict)
         self.actor.gen2.ocs.exportStatusTable(tableName)
 
     def newGuideErrors(self, keyvar):
@@ -279,12 +279,12 @@ class Gen2Cmd(object):
         vals = keyvar.valueList
         tvals = [v.__class__.baseType(v) for v in vals]
         
-        names = 'dRA', 'dDec', 'dInR', 'dAz', 'dAlt', 'dFocus', 'exposureId'
+        names = 'exposureId', 'dRA', 'dDec', 'dInR', 'dAz', 'dAlt', 'dFocus'
         keyDict = dict(zip(names, tvals))
 
         tableName = 'PFS.AG.ERR'
         self.logger.info('newGuideErrors: %s', keyDict)
-        self.actor.gen2.updateStatusDict(tableName, keyDict)
+        self.actor.gen2.ocs.setStatus(tableName, **keyDict)
         self.actor.gen2.ocs.exportStatusTable(tableName)
 
     def _updateCallback(self, actor, keyname, callback=None):
