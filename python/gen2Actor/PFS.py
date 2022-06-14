@@ -196,6 +196,7 @@ class PFS(BASECAM):
         else:
             tblName1 = ('%3.3sS%04.4d' % (self.inscode, 1))
 
+        self.keyTables = {}
         self.stattbl1 = self.ocs.addStatusTable(tblName1,
                                                 ['status', 'mode', 'count',
                                                  'mcsBoresight_x', 'mcsBoresight_y',
