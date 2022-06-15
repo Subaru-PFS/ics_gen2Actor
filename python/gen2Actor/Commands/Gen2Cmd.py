@@ -6,6 +6,8 @@ import datetime
 import logging
 import re
 
+import numpy as np
+
 import opscore.protocols.keys as keys
 import opscore.protocols.types as types
 from opscore.utility.qstr import qstr
