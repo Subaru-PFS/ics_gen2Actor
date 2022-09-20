@@ -69,3 +69,13 @@ FITS.SBR.OBS-MTHD OBS-MTHD   string UNKNOWN    Observing method
 FITS.SBR.MOON-EL  MOON-EL    float  0.0        [degree] Moon Elevation at exposure start
 FITS.SBR.MOON-ILL MOON-ILL   float  0.0        Moon illumination at exposure start
 FITS.SBR.MOON-SEP MOON-SEP   float  0.0        [degree] Moon Separation at exposure start
+#
+# Dither/guide offsets for INSTRM-1702
+#
+MEMORY.PFS.DITHER_RA_OFFSET_ASEC    W_DTHRA   float   0.0   [arcsec] cumulative dither offset, on sky.
+MEMORY.PFS.DITHER_DEC_OFFSET_ASEC   W_DTHDEC  float   0.0   [arcsec] cumulative dither offset, on sky.
+MEMORY.PFS.DITHER_PA_OFFSET_ASEC    W_DTHPA   float   0.0   [arcsec] cumulative dither offset, on sky.
+#
+MEMORY.PFS.AG_RA_OFFSET_ASEC    W_AGRA   float   0.0   [arcsec] cumulative guide offset, on sky.
+MEMORY.PFS.AG_DEC_OFFSET_ASEC   W_AGDEC  float   0.0   [arcsec] cumulative guide offset, on sky.
+MEMORY.PFS.AG_INR_OFFSET_ASEC   W_AGINR  float   0.0   [arcsec] cumulative guide offset, on sky.

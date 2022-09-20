@@ -481,6 +481,7 @@ class Gen2Cmd(object):
                                 m2_pos3=gk('M2-POS3'),
                                 tel_ra=pointing.ra.degree, tel_dec=pointing.dec.degree,
                                 dome_shutter_status=-9998, dome_light_status=-9998,
+                                dither_ra=gk('W_DTHRA'), dither_dec=gk('W_DTHDEC'), dither_pa=gk('W_DTHPA'),
                                 created_at=now.isoformat())
         except Exception as e:
             cmd.warn('text="failed to insert into tel_status: %s"' % (e))
@@ -573,6 +574,8 @@ class Gen2Cmd(object):
         cmd.inform(f'object={qstr(gk("OBJECT"))},{qstr(raStr)},{qstr(decStr)},{qstr(raStr)},{qstr(decStr)}')
         cmd.inform(f'pointing={qstr(pointingRaStr)},{qstr(pointingDecStr)}')
         cmd.inform(f'offsets={gk("W_RAOFF"):0.4f},{gk("W_DECOFF"):0.4f}')
+        cmd.inform(f'telDither={gk("W_DTHRA"):0.3f},{gk("W_DTHDEC"):0.3f},{gk("W_DTHPA"):0.3f}')
+        cmd.inform(f'telGuide={gk("W_AGRA"):0.3f},{gk("W_AGDEC"):0.3f},{gk("W_AGINR"):0.3f}')
         #
         cmd.inform(f'coordinate_system_ids="FK5",180.0,{gk("EQUINOX")}')
         cmd.inform(f'tel_axes={gk("AZIMUTH"):0.4f},{gk("ALTITUDE"):0.4f},{gk("ZD")},{gk("AIRMASS"):0.3f}')
