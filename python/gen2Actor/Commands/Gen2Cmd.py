@@ -597,5 +597,13 @@ class Gen2Cmd(object):
         cmd.inform(f'moon={gk("MOON-EL"):0.3f},{gk("MOON-SEP"):0.3f},{gk("MOON-ILL"):0.3f}')
         cmd.inform(f'obsMethod={qstr(gk("OBS-MTHD"))}')
 
+        screenPos = "unknown"
+        cmd.inform(f'domeLights={gk("W_TDLGHT")}; topScreenPos={gk("W_TFFSFP"):0.2f},{gk("W_TFFSRP"):0.2f},{screenPos}')
+        cmd.inform(f'ringLampsStatus={gk("W_TFF1ST")},{gk("W_TFF2ST")},{gk("W_TFF3ST")},{gk("W_TFF4ST")}')
+        cmd.inform(f'ringLampsCmd={gk("W_TFF1VC"):0.1f},{gk("W_TFF2VC"):0.1f},'
+                   f'{gk("W_TFF3VC"):0.1f},{gk("W_TFF4VC"):0.1f}')
+        cmd.inform(f'ringLamps={gk("W_TFF1VV"):0.1f},{gk("W_TFF2VV"):0.1f},'
+                   f'{gk("W_TFF3VV"):0.1f},{gk("W_TFF4VV"):0.1f}')
+
         if caller is not None:
             cmd.inform(f'statusUpdate={self.visit},{statusSequence},{caller}')
