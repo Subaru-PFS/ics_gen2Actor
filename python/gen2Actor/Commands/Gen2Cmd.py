@@ -16,7 +16,7 @@ from pfs.utils import butler
 from opdb import opdb as sptOpdb
 
 # from obdb import opdb
-from pfs.utils import opdb
+from ics.utils import opdb
 import astropy.coordinates
 import astropy.units as u
 
@@ -255,7 +255,7 @@ class Gen2Cmd(object):
 
         vals = keyvar.valueList
         tvals = [v.__class__.baseType(v) for v in vals]
-        
+
         names = 'designId', 'visit', 'ra', 'dec', 'pa', 'name'
         keyDict = dict(zip(names, tvals))
 
@@ -276,10 +276,10 @@ class Gen2Cmd(object):
             Float(name='dZ', units='mm', help='Focus error'),
         ),
         """
-        
+
         vals = keyvar.valueList
         tvals = [v.__class__.baseType(v) for v in vals]
-        
+
         names = 'exposureId', 'dRA', 'dDec', 'dInR', 'dAz', 'dAlt', 'dFocus'
         keyDict = dict(zip(names, tvals))
 
@@ -569,7 +569,8 @@ class Gen2Cmd(object):
             statusSequence = self.updateOpdb(cmd, now, statusDict, sky, pointing)
 
         cmd.inform('inst_ids="NAOJ","Subaru","PFS"')
-        cmd.inform(f'program={qstr(gk("PROP-ID"))},{qstr(gk("OBS-MOD"))},{qstr(gk("OBS-ALOC"))},{qstr(gk("OBSERVER"))}')
+        cmd.inform(f'program={qstr(gk("PROP-ID"))},{qstr(gk("OBS-MOD"))},'
+                   f'{qstr(gk("OBS-ALOC"))},{qstr(gk("OBSERVER"))}')
 
         cmd.inform(f'object={qstr(gk("OBJECT"))},{qstr(raStr)},{qstr(decStr)},{qstr(raStr)},{qstr(decStr)}')
         cmd.inform(f'pointing={qstr(pointingRaStr)},{qstr(pointingDecStr)}')
@@ -582,8 +583,10 @@ class Gen2Cmd(object):
         cmd.inform(f'tel_rot={gk("INST-PA")},{gk("INR-STR")}')
         cmd.inform(f'tel_focus={qstr(gk("TELFOCUS"))},{qstr(gk("FOC-POS"))},{gk("FOC-VAL")}')
         cmd.inform(f'tel_adc={qstr(gk("ADC-TYPE"))},{gk("ADC-STR")}')
-        cmd.inform(f'dome_env={gk("DOM-HUM"):0.3f},{gk("DOM-PRS"):0.3f},{gk("DOM-TMP"):0.3f},{gk("DOM-WND"):0.3f}')
-        cmd.inform(f'outside_env={gk("OUT-HUM"):0.3f},{gk("OUT-PRS"):0.3f},{gk("OUT-TMP"):0.3f},{gk("OUT-WND"):0.3f}')
+        cmd.inform(f'dome_env={gk("DOM-HUM"):0.3f},{gk("DOM-PRS"):0.3f},'
+                   f'{gk("DOM-TMP"):0.3f},{gk("DOM-WND"):0.3f}')
+        cmd.inform(f'outside_env={gk("OUT-HUM"):0.3f},{gk("OUT-PRS"):0.3f},'
+                   f'{gk("OUT-TMP"):0.3f},{gk("OUT-WND"):0.3f}')
         # cmd.inform(f'pointing={sky.frame.name},{sky.equinox},{sky.ra.deg},{sky.dec.deg}')
         cmd.inform(f'm2={qstr(gk("M2-TYPE"))},{gk("M2-POS1")},{gk("M2-POS2")},{gk("M2-POS3")}')
         cmd.inform(f'm2rot={gk("M2-ANG1"):0.4f},{gk("M2-ANG2"):0.4f},{gk("M2-ANG3"):0.4f}')

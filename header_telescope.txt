@@ -79,3 +79,25 @@ MEMORY.PFS.DITHER_PA_OFFSET_ASEC    W_DTHPA   float   0.0   [arcsec] cumulative 
 MEMORY.PFS.AG_RA_OFFSET_ASEC    W_AGRA   float   0.0   [arcsec] cumulative guide offset, on sky.
 MEMORY.PFS.AG_DEC_OFFSET_ASEC   W_AGDEC  float   0.0   [arcsec] cumulative guide offset, on sky.
 MEMORY.PFS.AG_INR_OFFSET_ASEC   W_AGINR  float   0.0   [arcsec] cumulative guide offset, on sky.
+#
+# Flat-field stuff for INSTRM-1441
+#
+TSCL.DOMEFF_1B          W_TFF1ST      int     0       Status of ring lamp 1
+TSCL.DOMEFF_2B          W_TFF2ST      int     0       Status of ring lamp 2
+TSCL.DOMEFF_3B          W_TFF3ST      int     0       Status of ring lamp 3
+TSCL.DOMEFF_4B          W_TFF4ST      int     0       Status of ring lamp 4
+#
+TSCL.DOMEFF_1B_VOL      W_TFF1VV      int     0       [V] Measured voltage of ring lamp 1
+TSCL.DOMEFF_2B_VOL      W_TFF2VV      int     0       [V] Measured voltage of ring lamp 2
+TSCL.DOMEFF_3B_VOL      W_TFF3VV      int     0       [V] Measured voltage of ring lamp 3
+TSCL.DOMEFF_4B_VOL      W_TFF4VV      int     0       [V] Measured voltage of ring lamp 4
+#
+TSCL.DOMEFF_1B_VOL_CMD  W_TFF1VC      int     0       [V] Commanded voltage of ring lamp 1
+TSCL.DOMEFF_2B_VOL_CMD  W_TFF2VC      int     0       [V] Commanded voltage of ring lamp 2
+TSCL.DOMEFF_3B_VOL_CMD  W_TFF3VC      int     0       [V] Commanded voltage of ring lamp 3
+TSCL.DOMEFF_4B_VOL_CMD  W_TFF4VC      int     0       [V] Commanded voltage of ring lamp 4
+#
+TSCV.DomeLight          W_TDLGHT      int     0       Mask of illuminated Dome lights
+#
+STATL.TOPSCREEN_FPOS    W_TFFSFP      float   0.0     [m] Position of front edge of FF screen
+STATL.TOPSCREEN_RPOS    W_TFFSRP      float   0.0     [m] Position of rear edge of FF screen
