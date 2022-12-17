@@ -287,6 +287,24 @@ class Gen2Cmd(object):
         self.logger.info('newGuideErrors: %s', keyDict)
         self.updateStatusDict(tableName, keyDict)
 
+    def newGroupId(self, keyvar):
+        """MHS keyvar callback to pass iic.groupId info over to Gen2
+
+        Key("groupId",
+            Int(name="gid", help="groupId"),
+            String(name="name", help="groupName"))
+        ),
+        """
+
+        gid, gname = keyvar.valueList
+        tableName = 'PFS.GROUPID'
+        now = datetime.datetime.now()
+        nowStr = datetime.datetime.strftime(now, "%Y-%m-%dT%H:%M:%S")
+
+        keyDict = dict(groupId=int(gid), groupName=str(gname), date=nowStr)
+        self.logger.info('newGroupId(%s): %s', gname, keyDict)
+        self.updateStatusDict(tableName, keyDict)
+
     def _updateCallback(self, actor, keyname, callback=None):
         """Update a keyvar callback, deleting existing one if necessary.
 
@@ -325,19 +343,20 @@ class Gen2Cmd(object):
 
         if 'PFS.DESIGN' not in self.actor.gen2.keyTables:
             self.makePfsTables(cmd)
-            
+
         self._updateCallback('iic', 'pfsDesign', self.newPfsDesign)
         self._updateCallback('ag', 'guideErrors', self.newGuideErrors)
-        
+        self._updateCallback('iic', 'groupId', self.newGroupId)
+
         cmd.inform(f'text="Gen2 key tables: {self.actor.gen2.keyTables.keys()}"')
         cmd.finish()
 
     def makePfsTables(self, cmd):
         keyMap = dict(ra='RA', dec='DEC', pa='PA',
                       visit='VISIT', designId='ID', name='NAME')
-        
+
         dictName = 'PFS.DESIGN'
-        dd = self.newStatusDict(dictName, keyMap, cmd)
+        self.newStatusDict(dictName, keyMap, cmd)
         self.actor.gen2.ocs.setStatus(dictName, ra=np.nan, dec=np.nan, pa=np.nan, 
                                       visit=None, designId=0xdeaddeadbeef, name='test table')
         self.actor.gen2.ocs.exportStatusTable(dictName)
@@ -346,13 +365,19 @@ class Gen2Cmd(object):
                       dAz='AZ_ERR', dAlt='ALT_ERR', dFocus='FOCUS_ERR',
                       exposureId='EXPID')
         dictName = 'PFS.AG.ERR'
-        d2 = self.newStatusDict(dictName, agKeys, cmd)
-        
+        self.newStatusDict(dictName, agKeys, cmd)
+
         self.actor.gen2.ocs.setStatus(dictName, dRA=np.nan, dDec=np.nan, dInR=np.nan, 
                                       dAz=np.nan, dAlt=np.nan, dFocus=np.nan,
                                       exposureId=0)
         self.actor.gen2.ocs.exportStatusTable(dictName)
-        
+
+        dictName = "PFS.GROUPID"
+        self.newStatusDict(dictName, dict(groupId="ID", groupName="NAME", date="DATE"),
+                           cmd)
+        self.actor.gen2.ocs.setStatus(dictName, groupId=-1, groupName="nogroup", date="never")
+        self.actor.gen2.ocs.exportStatusTable(dictName)
+
         cmd.finish(f'text="tables={self.actor.gen2.keyTables}"')
 
     def newStatusDict(self, dictName, keyNameMap, cmd):
@@ -373,7 +398,7 @@ class Gen2Cmd(object):
             The created Bunch thing.
         """
         gen2 = self.actor.gen2
-        
+
         ourNames = keyNameMap.keys()
         fullNameMap = dict()
         for k in keyNameMap.keys():
@@ -398,7 +423,7 @@ class Gen2Cmd(object):
             The MHS keyword names and values
         """
         gen2 = self.actor.gen2
-        
+
         gen2.ocs.setStatus(dictName, **keys)
         gen2.ocs.exportStatusTable(dictName)
 
