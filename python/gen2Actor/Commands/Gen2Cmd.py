@@ -4,6 +4,7 @@ from importlib import reload
 
 import datetime
 import logging
+import os
 import re
 
 import numpy as np
@@ -166,19 +167,39 @@ class Gen2Cmd(object):
 
         self.updateArchiving(cmd)
 
+    def doArchivePath(self, path, filetype, frameId=None):
+        """Arrange for Gen2 archiving of a single file path
+
+        Args:
+        -----
+        path : pathlike
+           a fully resolved path to archive
+        filetype : `str`
+           a friendly identifier for messages. e.g. 'PFSA'
+        frameId : `str`
+           a Gen2-sourced frameId to identify the path. Only used
+           when the id does not match the filename (PFSF v. pfsConfig)
+        """
+
+        if path is None or not os.path.exists(path):
+            self.logger.warning(f'NOT archiving nonexistant {filetype} file {path}')
+            return
+        
+        self.logger.info(f'requesting archiving of {filetype} {path}')
+        try:
+            self.actor.gen2.archivePfsFile(str(path), frameId=frameId)
+        except Exception as e:
+            self.logger.warning(f'failed to archive {filetype} file {path}: {e}')
+        
     def newPfscFilename(self, keyvar):
         """ Callback for instrument 'filename' keyword updates. """
         try:
-            fname = keyvar.getValue()
+            path = keyvar.getValue()
         except ValueError:
             self.logger.warn('failed to handle new filename keyvar for %s', keyvar)
             return
 
-        fname = str(fname)
-        self.logger.info('new filename to archive: %s', fname)
-
-        self.actor.gen2.archivePfsFile(fname)
-        self.logger.info(f'PFSC {fname}')
+        self.doArchivePath(path, 'PFSC')
 
     def newPfsaFileIds(self, keyvar):
         """Archive a PFSA file described by a ccd_mn.spsFileIds keyvar. """
@@ -190,21 +211,19 @@ class Gen2Cmd(object):
 
         try:
             path = self.actor.butler.getPath('spsFile', idDict)
-            self.actor.gen2.archivePfsFile(str(path))
-            self.logger.info(f'PFSA {idDict} {path}')
         except Exception as e:
             self.logger.warning(f'getPath(spsFile) with {idDict} failed: {e}')
+            return
+
+        self.doArchivePath(path, 'PFSA')
 
     def newPfsbFileIds(self, keyvar):
         """Archive a PFSB file described by a hx_mn.spsFileIds keyvar. """
 
         vals = keyvar.valueList
-        names = 'cam', 'pfsDay', 'visit', 'spectrograph', 'armNum'
-        idDict = dict(zip(names, vals))
-        path = self.actor.butler.getPath('rampFile', idDict)
+        path = vals[0]
 
-        self.actor.gen2.archivePfsFile(str(path))
-        self.logger.info(f'PFSB {idDict} {path}')
+        self.doArchivePath(path, 'PFSB')
 
     def newPfscFileIds(self, keyvar):
         """Archive a PFSC file described by a mcs.mcsFileIds keyvar. """
@@ -216,10 +235,11 @@ class Gen2Cmd(object):
 
         try:
             path = self.actor.butler.getPath('mcsFile', idDict)
-            self.actor.gen2.archivePfsFile(str(path))
-            self.logger.info(f'PFSC {idDict} {path}')
         except Exception as e:
             self.logger.warning(f'getPath(mcsFile) with {idDict} failed: {e}')
+            return
+
+        self.doArchivePath(path, 'PFSC')
 
     def newPfsdFileIds(self, keyvar):
         """Archive a PFSD file described by an agcc.agccFileIds keyvar. """
@@ -231,24 +251,25 @@ class Gen2Cmd(object):
 
         try:
             path = self.actor.butler.getPath('agccFile', idDict)
-            self.actor.gen2.archivePfsFile(str(path))
-            self.logger.info(f'PFSD {idDict} {path}')
         except Exception as e:
             self.logger.warning(f'getPath(agccFile) with {idDict} failed: {e}')
 
-    def newPfsConfigFileIds(self, keyvar):
-        """Archive a pfsConfig file described by an fps.pfsConfig keyvar. """
+        self.doArchivePath(path, 'PFSD')
+
+    def newPfsConfig(self, keyvar):
+        """Archive a pfsConfig file described by an iic.pfsConfig keyvar. """
 
         vals = keyvar.valueList
-        names = 'pfsDay', 'designId', 'visit0'
-        idDict = dict(zip(names, vals))
-
+        idDict = dict(pfsConfigId=vals[0],
+                      visit=vals[1],
+                      pfsDay=vals[2])
         try:
             path = self.actor.butler.getPath('pfsConfig', idDict)
-            self.actor.gen2.archivePfsFile(str(path))
-            self.logger.info(f'pfsConfig {idDict} {path}')
+            frameId = f'PFSF{idDict["visit"]:06d}00'
         except Exception as e:
             self.logger.warning(f'getPath(pfsConfig) with {idDict} failed: {e}')
+
+        self.doArchivePath(path, 'PFSF', frameId=frameId)
 
     def newPfsDesign(self, keyvar):
         """MHS keyvar callback to pass PfsDesign info over to Gen2 """
@@ -444,14 +465,14 @@ class Gen2Cmd(object):
         if cmd is None:
             cmd = self.actor.bcast
 
-        doArchive = self.actor.config.get('gen2', 'archive')
+        doArchive = self.actor.actorConfig['gen2']['archive']
 
         if 'fps' not in self.actor.models:
             cmd.warn("text='not updating callbacks until models loaded.....'")
             return
 
-        self._updateCallback('fps', 'pfsConfigPathIds',
-                             self.newPfsConfigFilename if 'pfsConfig' in doArchive else None)
+        self._updateCallback('iic', 'pfsConfig',
+                             self.newPfsConfig if 'pfsConfig' in doArchive else None)
         if False:
             self._updateCallback('mcs', 'mcsFileIds',
                                  self.newPfscFileIds if 'PFSC' in doArchive else None)
@@ -464,13 +485,16 @@ class Gen2Cmd(object):
 
         for sm in 1,2,3,4:
             for arm in 'b','r':
-                camName = f'ccd_{arm}{sm}'
-                self._updateCallback(camName, 'spsFileIds',
+                camName=f'{arm}{sm}'
+                actorName = f'hx_{camName}' if arm == 'n' else f'ccd_{camName}'
+                self._updateCallback(actorName, 'spsFileIds',
                                      self.newPfsaFileIds if camName in doArchive else None)
-
-            camName = f'hx_n{sm}'
-            self._updateCallback(camName, 'spsFileIds',
-                                 self.newPfsbFileIds if camName in doArchive else None)
+            for arm in 'n',:
+                camName=f'{arm}{sm}'
+                actorName = f'hx_{camName}'
+                self.logger.info(f'wiring in {actorName}.filename if {camName in doArchive}')
+                self._updateCallback(actorName, 'filename',
+                                     self.newPfsbFileIds if camName in doArchive else None)
 
         if cmd is not None:
             cmd.finish(f'text="archiving {doArchive}')
