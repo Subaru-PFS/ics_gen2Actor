@@ -14,6 +14,7 @@ __all__ = ['pfsDribble',
            'mcsexpose',
            'getPfsVisit',
            'archivePfsFile',
+           'archivePfsConfig',
            'newFilePath',
            'newMcsBoresight',
            '_frameToVisit']
@@ -176,11 +177,18 @@ def getPfsVisit(self):
 
     return visit
 
-def archivePfsFile(self, pathname):
-    filename = os.path.basename(pathname)
-    fullframeId = os.path.splitext(filename)[0]
-    frameId = fullframeId
+def archivePfsFile(self, pathname, frameId=None):
+    if frameId is None:
+        filename = os.path.basename(pathname)
+        fullframeId = os.path.splitext(filename)[0]
+        frameId = fullframeId
 
+    framelist = [(frameId, pathname)]
+    self.logger.info('archiving: %s' % (framelist))
+
+    self.ocs.archive_framelist(framelist)
+
+def archivePfsConfig(self, frameId, pathname):
     framelist = [(frameId, pathname)]
     self.logger.info('archiving: %s' % (framelist))
 
