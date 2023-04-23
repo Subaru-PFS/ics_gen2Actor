@@ -604,15 +604,15 @@ class Gen2Cmd(object):
         sky = astropy.coordinates.SkyCoord(f'{gk("RA")} {gk("DEC")}',
                                            unit=(u.hourangle, u.deg),
                                            frame=astropy.coordinates.FK5)
-        raStr = sky.ra.to_string(unit=u.hourangle, sep=':', precision=3, pad=True)
-        decStr = sky.dec.to_string(unit=u.degree, sep=':', precision=3, pad=True, alwayssign=True)
+        raStr = sky.ra.to_string(unit=u.hourangle, sep=':', precision=2, pad=True)
+        decStr = sky.dec.to_string(unit=u.degree, sep=':', precision=2, pad=True, alwayssign=True)
 
         pointing = astropy.coordinates.SkyCoord(f'{gk("RA_CMD")} {gk("DEC_CMD")}',
                                                 unit=(u.hourangle, u.deg),
                                                 frame=astropy.coordinates.FK5)
-        pointingRaStr = pointing.ra.to_string(unit=u.hourangle, sep=':', precision=3, pad=True)
+        pointingRaStr = pointing.ra.to_string(unit=u.hourangle, sep=':', precision=2, pad=True)
         pointingDecStr = pointing.dec.to_string(unit=u.degree, sep=':',
-                                                precision=3, pad=True, alwayssign=True)
+                                                precision=2, pad=True, alwayssign=True)
 
         if caller is not None:
             statusSequence = self.updateOpdb(cmd, now, statusDict, sky, pointing)
