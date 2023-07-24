@@ -327,6 +327,22 @@ class Gen2Cmd(object):
         self.logger.info('newGroupId(%s): %s', gname, keyDict)
         self.updateStatusDict(tableName, keyDict)
 
+    def newPfiShutters(self, keyvar):
+        """MHS keyvar callback to pass sps.pfiShutter info over to Gen2
+
+        Key('pfiShutters',
+            Enum('close', 'open', 'undef'))
+        """
+
+        state, = keyvar.valueList
+        tableName = 'PFS.SHUTTERS'
+        now = datetime.datetime.now()
+        nowStr = datetime.datetime.strftime(now, "%Y-%m-%dT%H:%M:%S")
+
+        keyDict = dict(state=str(state), date=nowStr)
+        self.logger.info('pfiShutter: %s', keyDict)
+        self.updateStatusDict(tableName, keyDict)
+
     def _updateCallback(self, actor, keyname, callback=None):
         """Update a keyvar callback, deleting existing one if necessary.
 
@@ -369,6 +385,7 @@ class Gen2Cmd(object):
         self._updateCallback('iic', 'pfsDesign', self.newPfsDesign)
         self._updateCallback('ag', 'guideErrors', self.newGuideErrors)
         self._updateCallback('iic', 'groupId', self.newGroupId)
+        self._updateCallback('sps', 'pfiShutters', self.newPfiShutters)
 
         cmd.inform(f'text="Gen2 key tables: {self.actor.gen2.keyTables.keys()}"')
         cmd.finish()
@@ -398,6 +415,12 @@ class Gen2Cmd(object):
         self.newStatusDict(dictName, dict(groupId="ID", groupName="NAME", date="DATE"),
                            cmd)
         self.actor.gen2.ocs.setStatus(dictName, groupId=-1, groupName="nogroup", date="never")
+        self.actor.gen2.ocs.exportStatusTable(dictName)
+
+        dictName = "PFS.SHUTTERS"
+        self.newStatusDict(dictName, dict(state="STATE", date="DATE"),
+                           cmd)
+        self.actor.gen2.ocs.setStatus(dictName, state="unknown", date="never")
         self.actor.gen2.ocs.exportStatusTable(dictName)
 
         cmd.finish(f'text="tables={self.actor.gen2.keyTables}"')
