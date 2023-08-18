@@ -537,10 +537,10 @@ class Gen2Cmd(object):
         gen2.archivePfsFile(str(pathname))
         cmd.finish(f'text="registered {pathname} for archiving"')
 
-    def updateOpdb(self, cmd, now, statusDict, sky, pointing):
+    def updateOpdb(self, cmd, now, statusDict, sky, pointing, caller):
         statusSequence = self.statusSequence
         cmd.debug(f'text="updating opdb.tel_status with visit={self.visit}, '
-                  f'sequence={statusSequence}"')
+                  f'sequence={statusSequence}, caller={caller}"')
         self.statusSequence += 1
 
         def gk(name, cmd=cmd, statusDict=statusDict):
@@ -550,11 +550,13 @@ class Gen2Cmd(object):
             self.opdb.insert_kw('tel_status',
                                 pfs_visit_id=self.visit, status_sequence_id=statusSequence,
                                 altitude=gk('ALTITUDE'), azimuth=gk('AZIMUTH'),
-                                insrot=gk('INR-STR'), adc_pa=gk('ADC-STR'),
+                                insrot=gk('INR-STR'), inst_pa=gk('INST-PA'),
+                                adc_pa=gk('ADC-STR'),
                                 m2_pos3=gk('M2-POS3'),
                                 tel_ra=pointing.ra.degree, tel_dec=pointing.dec.degree,
                                 dome_shutter_status=-9998, dome_light_status=-9998,
                                 dither_ra=gk('W_DTHRA'), dither_dec=gk('W_DTHDEC'), dither_pa=gk('W_DTHPA'),
+                                caller=caller,
                                 created_at=now.isoformat())
         except Exception as e:
             cmd.warn('text="failed to insert into tel_status: %s"' % (e))
@@ -639,7 +641,7 @@ class Gen2Cmd(object):
                                                 precision=2, pad=True, alwayssign=True)
 
         if caller is not None:
-            statusSequence = self.updateOpdb(cmd, now, statusDict, sky, pointing)
+            statusSequence = self.updateOpdb(cmd, now, statusDict, sky, pointing, caller)
 
         cmd.inform('inst_ids="NAOJ","Subaru","PFS"')
         cmd.inform(f'program={qstr(gk("PROP-ID"))},{qstr(gk("OBS-MOD"))},'
