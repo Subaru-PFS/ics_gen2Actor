@@ -604,6 +604,69 @@ class Gen2Cmd(object):
 
         return val
 
+    def _getScreenState(self, cmd, frontPos, rearPos):
+        """Clean up and pin down FF screen positions.
+
+        Parameters
+        ----------
+        cmd : `Command`
+            The Command to report errors to.
+        frontPos : `float`
+            The position of the front edge of the screen in m. Noisy.
+        rearPos : `float`
+            The position of the rear edge of the screen in m. Noisy.
+
+        Returns
+        -------
+        frontPos : `float`
+            The position of the front edge of the screen in m. Rounded.
+        rearPos : `float`
+            The position of the rear edge of the screen in m. Rounded.
+        screenPos : `str`
+            The screen position, one of "sky", "screen", "covered", or "unknown".
+        """
+        knownPositions = {(3.0, 1.5):"sky",
+                          (24.3, 1.5):"sky_highalt", # alt > 85deg, sometimes. The front screen
+                                                     # is actually at a hard limit at 24.265
+                          (16.0, 10.0):"corrugated_screen",
+                          (17.0, 1.5):"flat_screen",
+                          }
+        frontPosP = frontPosR = np.round(frontPos, 1)
+        rearPosP = rearPosR = np.round(rearPos, 1)
+
+        # There are only a few commonly missed positions:
+        if frontPosP >= 23.9:
+            frontPosP = 24.3
+        elif frontPosP >= 15.9 and frontPosP < 16.1:
+            frontPosP = 16.0
+        elif frontPosP < 3.1:
+            frontPosP = 3.0
+
+        screenPos = knownPositions.get((frontPosP, rearPosP), "unknown")
+        if screenPos == "unknown":
+            self.logger.warn(f'unknown screen position: front={frontPos},{frontPosR}, rear={rearPos},{rearPosR}')
+        return frontPosR, rearPosR, screenPos
+
+    def _getShutterPos(self, cmd, rawPos):
+        """Clean up and pin down shutter position.
+
+        Parameters
+        ----------
+        cmd : `Command`
+            The Command to report errors to.
+        rawPos : `str`
+            The raw shutter position from Gen2.
+
+        Returns
+        -------
+        shutterPos : `str`
+            The shutter position, one of "open", "closed", or "unknown".
+        """
+        rawPos = rawPos.lower()
+        if rawPos == '':
+            rawPos = 'unknown'
+        return rawPos
+
     def _genActorKeys(self, cmd, caller=None, doGen2Refresh=True):
         """Generate all gen2 status keys.
 
@@ -672,8 +735,12 @@ class Gen2Cmd(object):
         cmd.inform(f'moon={gk("MOON-EL"):0.3f},{gk("MOON-SEP"):0.3f},{gk("MOON-ILL"):0.3f}')
         cmd.inform(f'obsMethod={qstr(gk("OBS-MTHD"))}')
 
-        screenPos = "unknown"
-        cmd.inform(f'domeLights={gk("W_TDLGHT")}; topScreenPos={gk("W_TFFSFP"):0.2f},{gk("W_TFFSRP"):0.2f},{screenPos}')
+        screenFront, screenRear, screenPos = self._getScreenState(cmd, gk("W_TFFSFP"), gk("W_TFFSRP"))
+        shutterPos = self._getShutterPos(cmd, gk("W_TSHUTR"))
+
+        cmd.inform(f'domeLights={gk("W_TDLGHT")}; shutterPos={shutterPos}; '
+                   f'topScreenPos={screenFront:0.1f},{screenRear:0.1f},{screenPos}')
+
         cmd.inform(f'ringLampsStatus={gk("W_TFF1ST")},{gk("W_TFF2ST")},{gk("W_TFF3ST")},{gk("W_TFF4ST")}')
         cmd.inform(f'ringLampsCmd={gk("W_TFF1VC"):0.1f},{gk("W_TFF2VC"):0.1f},'
                    f'{gk("W_TFF3VC"):0.1f},{gk("W_TFF4VC"):0.1f}')
