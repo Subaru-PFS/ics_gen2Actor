@@ -621,6 +621,7 @@ class Gen2Cmd(object):
             The screen position, one of "sky", "screen", "covered", or "unknown".
         """
         knownPositions = {(3.0, 1.5):"sky",
+                          (24.0, 22.5):"instrument exchange",
                           (24.3, 1.5):"sky_highalt", # alt > 85deg, sometimes. The front screen
                                                      # is actually at a hard limit at 24.265
                           (16.0, 10.0):"corrugated_screen",
@@ -731,9 +732,9 @@ class Gen2Cmd(object):
         cmd.inform(f'obsMethod={qstr(gk("OBS-MTHD"))}')
 
         screenFront, screenRear, screenPos = self._getScreenState(cmd, gk("W_TFFSFP"), gk("W_TFFSRP"))
-        shutterPos = self._getShutterPos(cmd, gk("W_TSHUTR"))
+        domeShutter = self._getShutterPos(cmd, gk("W_TSHUTR"))
 
-        cmd.inform(f'domeLights={gk("W_TDLGHT")}; shutterPos={shutterPos}; '
+        cmd.inform(f'domeLights={gk("W_TDLGHT")}; domeShutter={domeShutter}; '
                    f'topScreenPos={screenFront:0.1f},{screenRear:0.1f},{screenPos}')
 
         cmd.inform(f'ringLampsStatus={gk("W_TFF1ST")},{gk("W_TFF2ST")},{gk("W_TFF3ST")},{gk("W_TFF4ST")}')
