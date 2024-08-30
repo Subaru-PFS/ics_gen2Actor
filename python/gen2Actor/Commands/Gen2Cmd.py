@@ -497,13 +497,8 @@ class Gen2Cmd(object):
 
         self._updateCallback('iic', 'pfsConfig',
                              self.newPfsConfig if 'pfsConfig' in doArchive else None)
-        if False:
-            self._updateCallback('mcs', 'mcsFileIds',
-                                 self.newPfscFileIds if 'PFSC' in doArchive else None)
-        else:
-            # Remove this once we start getting mcsFileIds.
-            self._updateCallback('mcs', 'filename',
-                                 self.newPfscFilename if 'PFSC' in doArchive else None)
+        self._updateCallback('mcs', 'mcsFileIds',
+                             self.newPfscFileIds if 'PFSC' in doArchive else None)
         self._updateCallback('agcc', 'pfsdPathIds',
                              self.newPfsdFileIds if 'PFSD' in doArchive else None)
 
