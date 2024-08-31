@@ -72,7 +72,15 @@ def _runPfsCmd(self, actor, cmdStr, tag, timelim=30.0, callFunc=None):
                                    cmdStr=cmdStr,
                                    timeLim=timelim)
         if ret.didFail:
-            raise CamCommandError(f'actor {actor} command {cmdStr} failed')
+            # If there is a text="explanation" keyword on the failing line,
+            # append that to the error sent to Gen2
+            #
+            lastReply = ret.lastReply
+            if 'text' in lastReply.keywords:
+                extraErrorMsg = f" with: {lastReply.keywords['text'].values[0]}"
+            except:
+                extraErrorMsg = ''
+            raise CamCommandError(f'actor {actor} command {cmdStr} failed{extraErrorMsg}')
         return ret
     else:
         callFunc = functools.partial(callFunc, tag=tag)
