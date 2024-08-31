@@ -78,7 +78,7 @@ def _runPfsCmd(self, actor, cmdStr, tag, timelim=30.0, callFunc=None):
             lastReply = ret.lastReply
             if 'text' in lastReply.keywords:
                 extraErrorMsg = f" with: {lastReply.keywords['text'].values[0]}"
-            except:
+            else:
                 extraErrorMsg = ''
             raise CamCommandError(f'actor {actor} command {cmdStr} failed{extraErrorMsg}')
         return ret
