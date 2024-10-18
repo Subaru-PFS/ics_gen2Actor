@@ -229,7 +229,7 @@ class Gen2Cmd(object):
         """Archive a PFSC file described by a mcs.mcsFileIds keyvar. """
 
         vals = keyvar.valueList
-        names = 'pfsDay', 'visit', 'mcsFrameNum'
+        names = 'pfsDay', 'visit', 'frame'
         idDict = dict(zip(names, vals))
         self.logger.info(f'getPath(mcsFile) with {idDict} ')
 
