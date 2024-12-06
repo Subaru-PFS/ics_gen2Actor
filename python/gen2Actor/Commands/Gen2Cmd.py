@@ -713,7 +713,7 @@ class Gen2Cmd(object):
         cmd.inform(f'telGuide={gk("W_AGRA"):0.3f},{gk("W_AGDEC"):0.3f},{gk("W_AGINR"):0.3f}')
         #
         cmd.inform(f'coordinate_system_ids="FK5",180.0,{gk("EQUINOX")}')
-        cmd.inform(f'tel_axes={gk("AZIMUTH"):0.4f},{gk("ALTITUDE"):0.4f},{gk("ZD")},{gk("AIRMASS"):0.3f}')
+        cmd.inform(f'tel_axes={gk("AZIMUTH"):0.4f},{gk("ALTITUDE"):0.4f},{gk("ZD"):0.5f},{gk("AIRMASS"):0.3f}')
         cmd.inform(f'tel_rot={gk("INST-PA")},{gk("INR-STR")}')
         cmd.inform(f'tel_focus={qstr(gk("TELFOCUS"))},{qstr(gk("FOC-POS"))},{gk("FOC-VAL")}')
         cmd.inform(f'tel_adc={qstr(gk("ADC-TYPE"))},{gk("ADC-STR")}')
