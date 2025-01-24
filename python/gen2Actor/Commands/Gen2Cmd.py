@@ -630,15 +630,13 @@ class Gen2Cmd(object):
         frontPosP = frontPosR = np.round(frontPos, 1)
         rearPosP = rearPosR = np.round(rearPos, 1)
 
-        # There are only a few commonly missed positions:
-        if frontPosP >= 23.9:
-            frontPosP = 24.3
-        elif frontPosP >= 15.9 and frontPosP < 16.1:
-            frontPosP = 16.0
-        elif frontPosP < 3.1:
-            frontPosP = 3.0
-
-        screenPos = knownPositions.get((frontPosP, rearPosP), "unknown")
+        allow = 0.2
+        screenPos = 'unknown'
+        for fp, rp in knownPositions.keys():
+            if abs(frontPosP-fp) <= allow and abs(rearPosP-rp) <= allow:
+                screenPos = knownPos[(fp,rp)]
+                break
+        
         if screenPos == "unknown":
             self.logger.warn(f'unknown screen position: front={frontPos},{frontPosR}, rear={rearPos},{rearPosR}')
         return frontPosR, rearPosR, screenPos
