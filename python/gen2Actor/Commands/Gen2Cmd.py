@@ -548,6 +548,7 @@ class Gen2Cmd(object):
                                 insrot=gk('INR-STR'), inst_pa=gk('INST-PA'),
                                 adc_pa=gk('ADC-STR'),
                                 m2_pos3=gk('M2-POS3'),
+                                m2_off3=gk('W_M2OFF3'),
                                 tel_ra=pointing.ra.degree, tel_dec=pointing.dec.degree,
                                 dome_shutter_status=-9998, dome_light_status=-9998,
                                 dither_ra=gk('W_DTHRA'), dither_dec=gk('W_DTHDEC'), dither_pa=gk('W_DTHPA'),
@@ -634,7 +635,7 @@ class Gen2Cmd(object):
         screenPos = 'unknown'
         for fp, rp in knownPositions.keys():
             if abs(frontPosP-fp) <= allow and abs(rearPosP-rp) <= allow:
-                screenPos = knownPos[(fp,rp)]
+                screenPos = knownPositions[(fp,rp)]
                 break
         
         if screenPos == "unknown":
