@@ -191,13 +191,13 @@ def archivePfsFile(self, pathname, frameId=None):
         fullframeId = os.path.splitext(filename)[0]
         frameId = fullframeId
 
-    framelist = [(frameId, pathname)]
+    framelist = [(frameId, pathname, os.path.getsize(pathname))]
     self.logger.info('archiving: %s' % (framelist))
 
     self.ocs.archive_framelist(framelist)
 
 def archivePfsConfig(self, frameId, pathname):
-    framelist = [(frameId, pathname)]
+    framelist = [(frameId, pathname, os.path.getsize(pathname))]
     self.logger.info('archiving: %s' % (framelist))
 
     self.ocs.archive_framelist(framelist)
