@@ -20,6 +20,9 @@ from opdb import opdb as sptOpdb
 from ics.utils import opdb
 import astropy.coordinates
 import astropy.units as u
+import sqlalchemy
+
+from gen2Actor import cachedict
 
 reload(sptOpdb)
 
@@ -38,7 +41,8 @@ class Gen2Cmd(object):
         #
         self.vocab = [
             ('getVisit', '[<caller>] [<designId>]', self.getVisit),
-            ('updateTelStatus', '[<caller>]', self.updateTelStatus),
+            ('updateTelStatus', '[<caller>] [<visit>]',
+             self.updateTelStatus),
             ('gen2Reload', '', self.gen2Reload),
             ('archive', '<pathname>', self.archive),
             ('updateArchiving', '', self.updateArchiving),
@@ -67,6 +71,8 @@ class Gen2Cmd(object):
                                                  help='exposure time'),
                                         keys.Key("frameId", types.String(),
                                                  help='Gen2 frame ID'),
+                                        keys.Key("visit", types.Int(),
+                                                 help='PFS visit'),
                                         keys.Key("designId", types.Long(), help="PFS design ID"),
 
                                         )
@@ -74,7 +80,7 @@ class Gen2Cmd(object):
         self.logger = logging.getLogger('Gen2Cmd')
         self.opdb = sptOpdb.OpDB(hostname='db-ics', dbname='opdb', username='pfs')
         self.visit = 0
-        self.statusSequence = 0
+        self.statusSequences = cachedict.cacheDict(size=10)
 
         self.actor.butler = butler.Butler()
         self.setupCallbacks()
@@ -127,7 +133,7 @@ class Gen2Cmd(object):
         description = caller if caller is not None else cmd.cmdr
 
         self.visit = visit = self.actor.gen2.getPfsVisit()
-        self.statusSequence = 0
+        self.statusSequences[visit] = 0
         try:
             designId = self.getDesignId(cmd)
         except Exception as e:
@@ -154,8 +160,9 @@ class Gen2Cmd(object):
         """
 
         caller = cmd.cmd.keywords['caller'].values[0] if 'caller' in cmd.cmd.keywords else None
+        visit = cmd.cmd.keywords['visit'].values[0] if 'visit' in cmd.cmd.keywords else None
 
-        self._genActorKeys(cmd, caller=caller)
+        self._genActorKeys(cmd, caller=caller, visit=visit)
 
         cmd.finish()
 
@@ -184,13 +191,13 @@ class Gen2Cmd(object):
         if path is None or not os.path.exists(path):
             self.logger.warning(f'NOT archiving nonexistant {filetype} file {path}')
             return
-        
+
         self.logger.info(f'requesting archiving of {filetype} {path}')
         try:
             self.actor.gen2.archivePfsFile(str(path), frameId=frameId)
         except Exception as e:
             self.logger.warning(f'failed to archive {filetype} file {path}: {e}')
-        
+
     def newPfscFilename(self, keyvar):
         """ Callback for instrument 'filename' keyword updates. """
         try:
@@ -532,18 +539,42 @@ class Gen2Cmd(object):
         gen2.archivePfsFile(str(pathname))
         cmd.finish(f'text="registered {pathname} for archiving"')
 
-    def updateOpdb(self, cmd, now, statusDict, sky, pointing, caller):
-        statusSequence = self.statusSequence
-        cmd.debug(f'text="updating opdb.tel_status with visit={self.visit}, '
+    def getNextSequenceId(self, cmd, visit):
+        """Return the next sequence_id for a visit in the tel_status table.
+
+        If we do not have that visit cached in self.statusSequences (i.e. gen2Actor was restarted, say),
+        query for it.
+        """
+        if visit not in self.statusSequences:
+            try:
+                with self.opdb.engine.connect() as conn:
+                    ret = conn.execute(sqlalchemy.text(f'select coalesce(max(status_sequence_id)+1, 0) '
+                                                       f'from tel_status '
+                                                       f'where pfs_visit_id={visit}'))
+                    nextSeq = ret.scalar_one()
+                    self.statusSequences[visit] = nextSeq
+            except Exception as e:
+                self.logger.warn(f'failed to fetch tel_status.status_sequence_id for {visit=}: {e}')
+                self.statusSequences[visit] = 0
+
+        nextStatusSequence = self.statusSequences[visit]
+        self.statusSequences[visit] += 1
+
+        return nextStatusSequence
+
+    def updateOpdb(self, cmd, now, statusDict, sky, pointing,
+                   caller, visit):
+
+        statusSequence = self.getNextSequenceId(cmd, visit)
+        cmd.debug(f'text="updating opdb.tel_status with visit={visit}, '
                   f'sequence={statusSequence}, caller={caller}"')
-        self.statusSequence += 1
 
         def gk(name, cmd=cmd, statusDict=statusDict):
             return self._getGen2Key(cmd, name, statusDict=statusDict)
 
         try:
             self.opdb.insert_kw('tel_status',
-                                pfs_visit_id=self.visit, status_sequence_id=statusSequence,
+                                pfs_visit_id=visit, status_sequence_id=statusSequence,
                                 altitude=gk('ALTITUDE'), azimuth=gk('AZIMUTH'),
                                 insrot=gk('INR-STR'), inst_pa=gk('INST-PA'),
                                 adc_pa=gk('ADC-STR'),
@@ -559,7 +590,7 @@ class Gen2Cmd(object):
 
         try:
             self.opdb.insert_kw('env_condition',
-                                pfs_visit_id=self.visit, status_sequence_id=statusSequence,
+                                pfs_visit_id=visit, status_sequence_id=statusSequence,
                                 dome_temperature=gk('DOM-TMP'), dome_pressure=gk('DOM-PRS'),
                                 dome_humidity=gk('DOM-HUM'),
                                 outside_temperature=gk('OUT-TMP'), outside_pressure=gk('OUT-PRS'),
@@ -637,7 +668,7 @@ class Gen2Cmd(object):
             if abs(frontPosP-fp) <= allow and abs(rearPosP-rp) <= allow:
                 screenPos = knownPositions[(fp,rp)]
                 break
-        
+
         if screenPos == "unknown":
             self.logger.warn(f'unknown screen position: front={frontPos},{frontPosR}, rear={rearPos},{rearPosR}')
         return frontPosR, rearPosR, screenPos
@@ -662,7 +693,9 @@ class Gen2Cmd(object):
             rawPos = 'unknown'
         return rawPos
 
-    def _genActorKeys(self, cmd, caller=None, doGen2Refresh=True):
+    def _genActorKeys(self, cmd,
+                      caller=None, visit=None,
+                      doGen2Refresh=True):
         """Generate all gen2 status keys.
 
         For this actor, this might get called from either the gen2 or the MHS sides.
@@ -682,6 +715,9 @@ class Gen2Cmd(object):
         now = datetime.datetime.now(tz=tz)
         statusDict = self._latchStatusDict(cmd)
 
+        if visit is None:
+            visit = self.visit
+
         def gk(name, cmd=cmd, statusDict=statusDict):
             return self._getGen2Key(cmd, name, statusDict=statusDict)
 
@@ -699,7 +735,8 @@ class Gen2Cmd(object):
                                                 precision=2, pad=True, alwayssign=True)
 
         if caller is not None:
-            statusSequence = self.updateOpdb(cmd, now, statusDict, sky, pointing, caller)
+            statusSequence = self.updateOpdb(cmd, now, statusDict, sky,
+                                             pointing, caller, visit)
 
         cmd.inform('inst_ids="NAOJ","Subaru","PFS"')
         cmd.inform(f'program={qstr(gk("PROP-ID"))},{qstr(gk("OBS-MOD"))},'
@@ -743,4 +780,4 @@ class Gen2Cmd(object):
                    f'{gk("W_TFF3VV"):0.1f},{gk("W_TFF4VV"):0.1f}')
 
         if caller is not None:
-            cmd.inform(f'statusUpdate={self.visit},{statusSequence},{caller}')
+            cmd.inform(f'statusUpdate={visit},{statusSequence},{caller}')
