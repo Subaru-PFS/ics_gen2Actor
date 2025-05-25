@@ -29,7 +29,7 @@ def run():
             t1 = t
             dt = (t1-t0).total_seconds()
 
-            if dt > 5:
+            if dt > 1:
                 print(f'{t0.strftime("%Y-%m-%d %H:%M:%S")} {dt}')
 
 if __name__ == "__main__":
