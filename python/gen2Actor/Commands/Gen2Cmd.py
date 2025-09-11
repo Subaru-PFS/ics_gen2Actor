@@ -303,13 +303,14 @@ class Gen2Cmd(object):
             Float(name='dAlt', units='arcsec', help='Altitude error'),
             Float(name='dZ', units='mm', help='Focus error'),
             Float(name='dScale', help='Scale error'),
+            String(name='status', help='status of guide errors'),
         ),
         """
 
         vals = keyvar.valueList
         tvals = [v.__class__.baseType(v) for v in vals]
 
-        names = 'exposureId', 'dRA', 'dDec', 'dInR', 'dAz', 'dAlt', 'dFocus', 'dScale'
+        names = 'exposureId', 'dRA', 'dDec', 'dInR', 'dAz', 'dAlt', 'dFocus', 'dScale', 'status'
         keyDict = dict(zip(names, tvals))
 
         tableName = 'PFS.AG.ERR'
@@ -409,13 +410,13 @@ class Gen2Cmd(object):
 
         agKeys = dict(dRA='RA_ERR', dDec='DEC_ERR', dInR='INR_ERR',
                       dAz='AZ_ERR', dAlt='ALT_ERR', dFocus='FOCUS_ERR',
-                      exposureId='EXPID', dScale='SCALE_ERR')
+                      exposureId='EXPID', dScale='SCALE_ERR', status='STATUS')
         dictName = 'PFS.AG.ERR'
         self.newStatusDict(dictName, agKeys, cmd)
 
         self.actor.gen2.ocs.setStatus(dictName, dRA=np.nan, dDec=np.nan, dInR=np.nan, 
                                       dAz=np.nan, dAlt=np.nan, dFocus=np.nan, dScale=np.nan,
-                                      exposureId=0)
+                                      exposureId=0, status="UNKNOWN")
         self.actor.gen2.ocs.exportStatusTable(dictName)
 
         dictName = "PFS.GROUPID"
