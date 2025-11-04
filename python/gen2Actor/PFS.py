@@ -119,7 +119,7 @@ class PFS(BASECAM):
         header_num = 0
         for line in fin:
             if not line.startswith('#'):
-                param = re.split('[\s!\n\t]+',line[:-1])
+                param = re.split(r'[\s!\n\t]+',line[:-1])
                 StatAlias = param[0]
                 FitsKey = param[1]
                 FitsType = param[2]
@@ -279,7 +279,7 @@ class PFS(BASECAM):
             if callback is not None:
                 callback(subtag, l)
 
-            if re.search('^\S+ \S+ [fF] .*', l):
+            if re.search(r'^\S+ \S+ [fF] .*', l):
                 raise CamCommandError(l)
 
             self.logger.debug('exec ret: %s', l)
@@ -517,7 +517,7 @@ class PFS(BASECAM):
             num_frames = 1
 
         # Check frame_no
-        match = re.match('^(\w{3})(\w)(\d{8})$', frame_no)
+        match = re.match(r'^(\w{3})(\w)(\d{8})$', frame_no)
         if not match:
             raise PFSError("Error in frame_no: '%s'" % frame_no)
 

@@ -6,6 +6,7 @@ import datetime
 import logging
 import os
 import re
+import time
 
 import numpy as np
 
@@ -48,7 +49,9 @@ class Gen2Cmd(object):
             ('updateArchiving', '', self.updateArchiving),
             ('makeTables', '', self.makePfsTables),
             ('setupCallbacks', '', self.setupCallbacks),
-            ]
+            ('sendAlert', '[<id>] <name> <severity> [<description>] [<detail>]', self.sendAlert),
+            ('clearAlert', '<id>', self.clearAlert),
+        ]
 
         # Define typed command arguments for the above commands.
         self.keys = keys.KeysDictionary("core_core", (1, 1),
@@ -75,6 +78,17 @@ class Gen2Cmd(object):
                                                  help='PFS visit'),
                                         keys.Key("designId", types.Long(), help="PFS design ID"),
 
+                                        keys.Key('id', types.String(),
+                                                 help="identifier, for Gen2 alerts"),
+                                        keys.Key('name', types.String(),
+                                                 help='readable name, for Gen2 alerts'),
+                                        keys.Key('description', types.String(),
+                                                 help='one-line description, for Gen2 alerts'),
+                                        keys.Key('detail', types.String(),
+                                                 help='further details, for Gen2 alerts. Can be multiline.'),
+                                        keys.Key('severity',
+                                                 types.Enum('debug', 'normal', 'ok', 'info', 'warning', 'error', 'critical'),
+                                                 help='Gen2-defined alert levels'),
                                         )
 
         self.logger = logging.getLogger('Gen2Cmd')
@@ -151,6 +165,52 @@ class Gen2Cmd(object):
         self._genActorKeys(cmd, caller=caller)
 
         cmd.finish('visit=%d' % (visit))
+
+    def clearAlert(self, cmd):
+        """Clear a possibly existing Gen2 event. """
+
+        cmdKeys = cmd.cmd.keywords
+        alertId = cmdKeys['id'].values[0]
+
+        now = time.time()
+        self.actor.gen2.ocs.send_event(dict(alarm_id=str(alertId),
+                                            name='',
+                                            timestamp=now,
+                                            severity='ok'))
+        cmd.finish(f'alert={alertId},"",ok,{now:0.3f},"","",""')
+
+    def sendAlert(self, cmd):
+        """Create or update a Gen2 event. """
+
+        # Note that the g2cam marshalling mechanism can only deal with types it knows about, so
+        # we need to convert the opscore meta-types to `str`.
+        cmdKeys = cmd.cmd.keywords
+        alertId = str(cmdKeys['id'].values[0]) if 'id' in cmdKeys else None
+        alertName = str(cmdKeys['name'].values[0])
+        severity = str(cmdKeys['severity'].values[0])
+        description = str(cmdKeys['description'].values[0]) if 'description' in cmdKeys else ''
+        detail = str(cmdKeys['detail'].values[0]) if 'detail' in cmdKeys else ''
+
+        now = time.time()
+        if alertId is None:
+            t = int(time.time() * 1000)
+            alertId = f'{cmd.cmdr}_{t}'
+        alarmDict = dict(alarm_id=alertId,
+                         severity=severity,
+                         name=alertName,
+                         timestamp=now)
+        if description:
+            alarmDict['description'] = description
+        else:
+            description = ''
+
+        if detail:
+            alarmDict['detail_text'] = detail
+        else:
+            detail = ''
+
+        self.actor.gen2.ocs.send_event(alarmDict)
+        cmd.finish(f'alert={alertId},{alertName},{severity},{now:0.3f},{qstr(description)},{qstr(detail)}')
 
     def updateTelStatus(self, cmd):
         """Query for a new PFS status info.
@@ -581,7 +641,7 @@ class Gen2Cmd(object):
                                 adc_pa=gk('ADC-STR'),
                                 m2_pos3=gk('M2-POS3'),
                                 m2_off3=gk('W_M2OFF3'),
-                                tel_ra=pointing.ra.degree, tel_dec=pointing.dec.degree,
+                                tel_ra=float(pointing.ra.degree), tel_dec= float(pointing.dec.degree),
                                 dome_shutter_status=-9998, dome_light_status=-9998,
                                 dither_ra=gk('W_DTHRA'), dither_dec=gk('W_DTHDEC'), dither_pa=gk('W_DTHPA'),
                                 caller=caller,
