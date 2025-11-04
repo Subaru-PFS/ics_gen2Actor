@@ -49,8 +49,8 @@ class Gen2Cmd(object):
             ('updateArchiving', '', self.updateArchiving),
             ('makeTables', '', self.makePfsTables),
             ('setupCallbacks', '', self.setupCallbacks),
-            ('sendAlert', '[<id>] <name> <severity> <description> [<detail>]', self.sendAlert),
-            ('clearAlert', '[<id>]', self.clearAlert),
+            ('sendAlert', '[<id>] <name> <severity> [<description>] [<detail>]', self.sendAlert),
+            ('clearAlert', '<id>', self.clearAlert),
         ]
 
         # Define typed command arguments for the above commands.
@@ -172,10 +172,12 @@ class Gen2Cmd(object):
         cmdKeys = cmd.cmd.keywords
         alertId = cmdKeys['id'].values[0]
 
+        now = time.time()
         self.actor.gen2.ocs.send_event(dict(alarm_id=str(alertId),
                                             name='',
+                                            timestamp=now,
                                             severity='ok'))
-        cmd.finish(f'alert={alertId},ok,"","",""')
+        cmd.finish(f'alert={alertId},"",ok,{now:0.3f},"","",""')
 
     def sendAlert(self, cmd):
         """Create or update a Gen2 event. """
@@ -189,24 +191,26 @@ class Gen2Cmd(object):
         description = str(cmdKeys['description'].values[0]) if 'description' in cmdKeys else ''
         detail = str(cmdKeys['detail'].values[0]) if 'detail' in cmdKeys else ''
 
+        now = time.time()
         if alertId is None:
             t = int(time.time() * 1000)
             alertId = f'{cmd.cmdr}_{t}'
         alarmDict = dict(alarm_id=alertId,
                          severity=severity,
-                         name=alertName)
+                         name=alertName,
+                         timestamp=now)
         if description:
             alarmDict['description'] = description
         else:
             description = ''
 
         if detail:
-            alarmDict['detail'] = detail
+            alarmDict['detail_text'] = detail
         else:
             detail = ''
 
         self.actor.gen2.ocs.send_event(alarmDict)
-        cmd.finish(f'alert={alertId},{alertName},{severity},{qstr(description)},{qstr(detail)}')
+        cmd.finish(f'alert={alertId},{alertName},{severity},{now:0.3f},{qstr(description)},{qstr(detail)}')
 
     def updateTelStatus(self, cmd):
         """Query for a new PFS status info.
