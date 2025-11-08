@@ -595,9 +595,18 @@ class Gen2Cmd(object):
     def archive(self, cmd):
         """ Archive a FITS file for STARS. """
         pathname = cmd.cmd.keywords['pathname'].values[0]
-        gen2 = self.actor.gen2
 
-        gen2.archivePfsFile(str(pathname))
+        fname = os.path.basename(pathname)
+        if fname.startswith('pfsConfig'):
+            stem = os.path.splitext(fname)[0]
+            visit = int(stem.split('-')[-1])
+            frameId = f'PFSF{visit:06d}00'
+            filetype = 'PFSF'
+        else:
+            frameId = None
+            filetype = fname[:4]
+
+        self.doArchivePath(str(pathname), filetype, frameId=frameId)
         cmd.finish(f'text="registered {pathname} for archiving"')
 
     def getNextSequenceId(self, cmd, visit):
