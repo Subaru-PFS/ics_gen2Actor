@@ -44,6 +44,8 @@ class Gen2Cmd(object):
             ('getVisit', '[<caller>] [<designId>]', self.getVisit),
             ('updateTelStatus', '[<caller>] [<visit>]',
              self.updateTelStatus),
+            ('updateDomeState', '',
+             self.updateDomeState),
             ('gen2Reload', '', self.gen2Reload),
             ('archive', '<pathname>', self.archive),
             ('updateArchiving', '', self.updateArchiving),
@@ -464,7 +466,7 @@ class Gen2Cmd(object):
 
         dictName = 'PFS.DESIGN'
         self.newStatusDict(dictName, keyMap, cmd)
-        self.actor.gen2.ocs.setStatus(dictName, ra=np.nan, dec=np.nan, pa=np.nan, 
+        self.actor.gen2.ocs.setStatus(dictName, ra=np.nan, dec=np.nan, pa=np.nan,
                                       visit=None, designId=0xdeaddeadbeef, name='test table')
         self.actor.gen2.ocs.exportStatusTable(dictName)
 
@@ -474,7 +476,7 @@ class Gen2Cmd(object):
         dictName = 'PFS.AG.ERR'
         self.newStatusDict(dictName, agKeys, cmd)
 
-        self.actor.gen2.ocs.setStatus(dictName, dRA=np.nan, dDec=np.nan, dInR=np.nan, 
+        self.actor.gen2.ocs.setStatus(dictName, dRA=np.nan, dDec=np.nan, dInR=np.nan,
                                       dAz=np.nan, dAlt=np.nan, dFocus=np.nan, dScale=np.nan,
                                       exposureId=0, status="UNKNOWN")
         self.actor.gen2.ocs.exportStatusTable(dictName)
@@ -671,7 +673,11 @@ class Gen2Cmd(object):
 
         return statusSequence
 
-    def _latchStatusDict(self,cmd):
+    def _latchStatusDict(self, cmd):
+        """Return an up-to-date copy of the current Gen2 statusDict."""
+
+        self.actor.gen2.update_header_stat()
+
         return self.actor.gen2.statusDictTel.copy()
 
     def _getGen2Key(self, cmd, name, statusDict=None):
@@ -763,9 +769,71 @@ class Gen2Cmd(object):
             rawPos = 'unknown'
         return rawPos
 
+    def _getVentState(self, cmd, keyVal):
+        """Clean up raw Gen2 dome vent keyword values"""
+
+        val = keyVal.lower()
+        if val == 'close':
+            val = 'closed'
+        return val
+
+    def _updateDomeState(self, cmd, statusDict=None,
+                         onlyOnChanges=True):
+        """Generate dome state keys. shutter/lights/etc
+
+        Parameters
+        ----------
+        cmd : `Command`
+            The Command to report to
+        onlyOnChanges : `bool`
+            If set, only report if anything has changed
+        """
+        cmd.debug('text="starting updateDomeStatus"')
+        if statusDict is None:
+            statusDict = self._latchStatusDict(cmd)
+
+        def gk(name, cmd=cmd, statusDict=statusDict):
+            return self._getGen2Key(cmd, name, statusDict=statusDict)
+
+        screenFront, screenRear, screenPos = self._getScreenState(cmd, gk("W_TFFSFP"), gk("W_TFFSRP"))
+        domeShutter = self._getShutterPos(cmd, gk("W_TSHUTR"))
+        domeLights = gk("W_TDLGHT")
+        domeVentsAll = self._getVentState(cmd, gk("W_TVNTAL"))
+        domeVentsObs = self._getVentState(cmd, gk("W_TVNTOB"))
+
+        # Track the keys we want to alert on changes
+        upd = dict()
+        upd['screenPos'] = screenPos
+        upd['domeShutter'] = domeShutter
+        upd['domeLights'] = domeLights
+        upd['domeVentsObs'] = domeVentsObs
+
+        try:
+            ts = self.domeState
+        except AttributeError:
+            self.domeState = dict()
+            ts = self.domeState
+        changed = False
+        for k, v in upd.items():
+            changed |= ts.get(k) != v
+            ts[k] = v
+
+        if not onlyOnChanges or changed:
+            cmd.inform(f'domeLights={domeLights}; domeShutter={domeShutter}; '
+                       f'topScreenPos={screenFront:0.1f},{screenRear:0.1f},{screenPos}')
+            cmd.inform(f'domeVents={domeVentsAll},{domeVentsObs}')
+
+    def updateDomeState(self, cmd):
+        """Generate dome status keys"""
+        self._updateDomeState(cmd=cmd, onlyOnChanges=False)
+        cmd.finish()
+
+    def testDomeState(self, cmd):
+        self.domeState['domeVentObs'] = 'unknown'
+        cmd.finish('text="poked dome status keys"')
+
     def _genActorKeys(self, cmd,
-                      caller=None, visit=None,
-                      doGen2Refresh=True):
+                      caller=None, visit=None):
         """Generate all gen2 status keys.
 
         For this actor, this might get called from either the gen2 or the MHS sides.
@@ -778,9 +846,6 @@ class Gen2Cmd(object):
         entire mechanism will be changed.
 
         """
-
-        if doGen2Refresh:
-            self.actor.gen2.update_header_stat()
         tz = datetime.timezone(datetime.timedelta(hours=-10), "HST")
         now = datetime.datetime.now(tz=tz)
         statusDict = self._latchStatusDict(cmd)
@@ -837,11 +902,7 @@ class Gen2Cmd(object):
         cmd.inform(f'moon={gk("MOON-EL"):0.3f},{gk("MOON-SEP"):0.3f},{gk("MOON-ILL"):0.3f}')
         cmd.inform(f'obsMethod={qstr(gk("OBS-MTHD"))}')
 
-        screenFront, screenRear, screenPos = self._getScreenState(cmd, gk("W_TFFSFP"), gk("W_TFFSRP"))
-        domeShutter = self._getShutterPos(cmd, gk("W_TSHUTR"))
-
-        cmd.inform(f'domeLights={gk("W_TDLGHT")}; domeShutter={domeShutter}; '
-                   f'topScreenPos={screenFront:0.1f},{screenRear:0.1f},{screenPos}')
+        self._updateDomeState(cmd, statusDict=statusDict, onlyOnChanges=False)
 
         cmd.inform(f'ringLampsStatus={gk("W_TFF1ST")},{gk("W_TFF2ST")},{gk("W_TFF3ST")},{gk("W_TFF4ST")}')
         cmd.inform(f'ringLampsCmd={gk("W_TFF1VC"):0.1f},{gk("W_TFF2VC"):0.1f},'

@@ -102,3 +102,6 @@ TSCV.DomeLight          W_TDLGHT      int     0       Mask of illuminated Dome l
 STATL.TOPSCREEN_FPOS    W_TFFSFP      float   0.0     [m] Position of front edge of FF screen
 STATL.TOPSCREEN_RPOS    W_TFFSRP      float   0.0     [m] Position of rear edge of FF screen
 STATL.DOMESHUTTER_POS	W_TSHUTR      string  UNKNOWN Position of dome shutter
+#
+STATL.VENT_SHUTTER_POS	W_TVNTAL      string  UNKNOWN State of all dome vents
+STATL.OBSFLR_VENT_POS	W_TVNTOB      string  UNKNOWN State of observing floor dome vents
