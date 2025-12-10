@@ -1,12 +1,11 @@
 #!/usr/bin/env python
 
-from importlib import reload
-
 import datetime
 import logging
 import os
 import re
 import time
+from zoneinfo import ZoneInfo
 
 import numpy as np
 
@@ -15,17 +14,13 @@ import opscore.protocols.types as types
 from opscore.utility.qstr import qstr
 from pfs.utils import butler
 
-from opdb import opdb as sptOpdb
+from pfs.utils.database.opdb import OpDB
 
-# from obdb import opdb
-from ics.utils import opdb
 import astropy.coordinates
 import astropy.units as u
-import sqlalchemy
 
 from gen2Actor import cachedict
 
-reload(sptOpdb)
 
 class Gen2Cmd(object):
 
@@ -94,7 +89,7 @@ class Gen2Cmd(object):
                                         )
 
         self.logger = logging.getLogger('Gen2Cmd')
-        self.opdb = sptOpdb.OpDB(hostname='db-ics', dbname='opdb', username='pfs')
+        self.opdb = OpDB()
         self.visit = 0
         self.statusSequences = cachedict.cacheDict(size=10)
 
@@ -158,9 +153,11 @@ class Gen2Cmd(object):
 
         cmd.debug(f'text="updating opdb.pfs_visit with visit={visit}, design_id={designId}, '
                   f'and description={description}"')
+
+        now = datetime.datetime.now(tz=ZoneInfo("HST"))
         try:
-            opdb.opDB.insert('pfs_visit', pfs_visit_id=visit, pfs_visit_description=description,
-                             pfs_design_id=designId, issued_at='now')
+            self.opdb.insert_kw('pfs_visit', pfs_visit_id=visit, pfs_visit_description=description,
+                             pfs_design_id=designId, issued_at=now.isoformat())
         except Exception as e:
             cmd.warn('text="failed to insert into pfs_visit: %s"' % (e))
 
@@ -619,12 +616,10 @@ class Gen2Cmd(object):
         """
         if visit not in self.statusSequences:
             try:
-                with self.opdb.engine.connect() as conn:
-                    ret = conn.execute(sqlalchemy.text(f'select coalesce(max(status_sequence_id)+1, 0) '
-                                                       f'from tel_status '
-                                                       f'where pfs_visit_id={visit}'))
-                    nextSeq = ret.scalar_one()
-                    self.statusSequences[visit] = nextSeq
+                sql = "SELECT COALESCE(MAX(status_sequence_id)+1, 0) FROM tel_status WHERE pfs_visit_id=:visit_id"
+                nextSeq = self.opdb.query_scalar(sql, params={'visit_id': visit})
+
+                self.statusSequences[visit] = nextSeq
             except Exception as e:
                 self.logger.warn(f'failed to fetch tel_status.status_sequence_id for {visit=}: {e}')
                 self.statusSequences[visit] = 0
