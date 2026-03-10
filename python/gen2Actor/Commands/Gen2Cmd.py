@@ -328,7 +328,7 @@ class Gen2Cmd(object):
         vals = keyvar.valueList
         idDict = dict(pfsConfigId=vals[0],
                       visit=vals[1],
-                      pfsDay=vals[2])
+                      pfsDay=vals[3])
         try:
             path = self.actor.butler.getPath('pfsConfig', idDict)
             frameId = f'PFSF{idDict["visit"]:06d}00'
