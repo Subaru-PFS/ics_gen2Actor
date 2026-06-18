@@ -655,6 +655,7 @@ class Gen2Cmd(object):
         except Exception as e:
             cmd.warn('text="failed to insert into tel_status: %s"' % (e))
 
+        cmd.debug('text="updating opdb.env_condition"')
         try:
             self.opdb.insert_kw('env_condition',
                                 pfs_visit_id=visit, status_sequence_id=statusSequence,
