@@ -1,13 +1,11 @@
 #!/usr/bin/env python
 
 from builtins import object
-import subprocess
 
 import numpy as np
 
 import opscore.protocols.keys as keys
 import opscore.protocols.types as types
-from opscore.utility.qstr import qstr
 
 class TopCmd(object):
 

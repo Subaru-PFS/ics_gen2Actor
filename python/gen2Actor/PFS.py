@@ -7,13 +7,12 @@
 """
 
 from importlib import reload
-import logging
-import math
-import sys, os, time
+import sys
+import os
+import time
 import re
 import threading
 from datetime import datetime, timedelta
-import pipes
 import base64
 
 import subprocess
@@ -22,7 +21,7 @@ import astropy.io.fits as pyfits
 from astropy.time import Time
 
 # gen2 base imports
-from g2base import Bunch, Task
+from g2base import Bunch
 
 # g2cam imports
 from g2cam.Instrument import BASECAM, CamCommandError
@@ -309,7 +308,7 @@ class PFS(BASECAM):
             # Try to look up the named method
             method = getattr(self, cmdName)
 
-        except AttributeError as e:
+        except AttributeError:
             result = "ERROR: No such method in subsystem: %s" % (cmdName)
             self.logger.error(result)
             raise CamCommandError(result)
@@ -526,7 +525,7 @@ class PFS(BASECAM):
         # Convert number to an integer
         try:
             frame_cnt = int(match.group(3))
-        except ValueError as e:
+        except ValueError:
             raise PFSError("Error in frame_no: '%s'" % frame_no)
 
         statusDict = {
