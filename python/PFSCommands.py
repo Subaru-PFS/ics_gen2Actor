@@ -5,7 +5,7 @@ import time
 import numpy as np
 
 from g2cam.Instrument import CamCommandError
-from opscore.actor.keyvar import AllCodes, DoneCodes
+from opscore.actor.keyvar import AllCodes
 
 __all__ = ['pfsDribble',
            '_runPfsCmd',
@@ -100,7 +100,7 @@ def pfsDribble(self, reply, tag=None):
         raise CamCommandError(f'fail: {reply}')
     if reply.isDone:
         self.ocs.setvals(tag, task_end=time.time(),
-                         cmd_str=f'OK')
+                         cmd_str='OK')
         return
     self.ocs.setvals(tag, cmd_str=str(reply.lastReply))
     time.sleep(0.1)
