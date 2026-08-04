@@ -13,7 +13,6 @@ import sys, os, time
 import re
 import threading
 from datetime import datetime, timedelta
-import pipes
 import base64
 
 import subprocess
