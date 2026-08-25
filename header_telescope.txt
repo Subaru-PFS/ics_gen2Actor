@@ -3,6 +3,7 @@ NA                TELESCOP   string Subaru  Telescope/System which Inst. is atta
 NA                INSTRUME   string PFS     Instrument name
 NA                TIMESYS    string UTC     Time System used in the header
 #
+FITS.SBR.MAINOBCP MAINOBCP   string UNKNOWN    Gen2-assigned instrument
 FITS.PFS.PROP-ID  PROP-ID    string UNKNOWN    Proposal ID                                    
 FITS.PFS.OBSERVER OBSERVER   string UNKNOWN    Observer
 # 
