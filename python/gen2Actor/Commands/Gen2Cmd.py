@@ -703,6 +703,29 @@ class Gen2Cmd(object):
 
         return val
 
+    def _setGen2Key(self, cmd, statusDict, name, newValue):
+        """ Utility to wrap setting Gen2 keyword values.
+
+        This is only useful for modifying the very temporarily latched and cached statusDict. I.e.
+        for modifying values we get from Gen2.
+
+        Bugs
+        ----
+
+        This is disgustingly intimate with the current PFS.py internals.
+        """
+
+        try:
+            hdr1 = self.actor.gen2.tel_header[name]
+        except:
+            cmd.warn(f'text="Gen2 status key {name} is unknown!"')
+            return
+
+        try:
+            statusDict[hdr1[0]] = newValue
+        except Exception as e:
+            cmd.warn(f'text="FAILED to set Gen2 status key {name}={newValue}: {e}"')
+
     def _getScreenState(self, cmd, frontPos, rearPos):
         """Clean up and pin down FF screen positions.
 
@@ -828,6 +851,21 @@ class Gen2Cmd(object):
         self.domeState['domeVentObs'] = 'unknown'
         cmd.finish('text="poked dome status keys"')
 
+    def finalizeProposalId(self, cmd, statusDict):
+        """If PFS is not on the telescope, replace the PROP-ID with a engineering value. """
+
+        mainInst = self._getGen2Key(cmd, 'MAINOBCP', statusDict)
+        if mainInst == 'PFS':
+            return
+
+        cmd.inform('text="PFS not main OBCP instrument: fetching static engineering_proposal_id"')
+        try:
+            engPropId = self.actor.actorConfig['gen2']['engineering_proposal_id']
+        except Exception as e:
+            cmd.warn(f'text="failed to fetch engineering_proposal_id: {e}"')
+            engPropId = 'UNKNOWN'
+        self._setGen2Key(cmd, statusDict, 'PROP-ID', engPropId)
+
     def _genActorKeys(self, cmd,
                       caller=None, visit=None):
         """Generate all gen2 status keys.
@@ -845,6 +883,7 @@ class Gen2Cmd(object):
         tz = datetime.timezone(datetime.timedelta(hours=-10), "HST")
         now = datetime.datetime.now(tz=tz)
         statusDict = self._latchStatusDict(cmd)
+        self.finalizeProposalId(cmd, statusDict)
 
         if visit is None:
             visit = self.visit
